@@ -1,7 +1,35 @@
 import datetime
 from typing import Optional
 from beanie import Document
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from enum import Enum
+
+
+class LoginStatus(Enum):
+    success = True
+    failed = False
+
+
+class UserRole(Enum):
+    viewer = ("viewer", 1)
+    writer = ("writer", 2)
+    editor = ("editor", 3)
+    admin = ("admin", 4)
+
+    def __init__(self, label: str, level: int):
+        self._label = label
+        self._level = level
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    @property
+    def level(self) -> int:
+        return self._level
+
+    def __str__(self) -> str:
+        return self._label
 
 
 class User(Document):
@@ -10,7 +38,7 @@ class User(Document):
     password: str
     firstName: str
     lastName: str
-    role: str
+    role: UserRole = Field(default=UserRole.viewer)
     isActive: bool
     lastSeen: datetime.datetime
 
@@ -27,6 +55,24 @@ class User(Document):
             "role": "admin",
             "isActive": True,
             "lastSeen": datetime.datetime.now(),
+        }
+
+
+class Logins(Document):
+    userUid: str
+    timestamp: datetime.datetime
+    ipAddress: str
+    userAgent: str
+    status: LoginStatus
+
+    class Config:
+        json_schema_extra = {
+          "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
+          "email": "demo@cortex.ui",
+          "timestamp": "2025-07-21T09:13:00Z",
+          "ip": "91.11.234.56",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64...)",
+          "status": True
         }
 
 

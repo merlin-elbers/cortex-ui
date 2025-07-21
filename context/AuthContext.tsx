@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import {redirect} from "next/navigation";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserPublic = {
     uid: string;
@@ -64,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 body: urlencoded,
             });
 
-            if (!res.ok) return false
+            if (res.status !== 200) return false
 
             const json = await res.json()
             localStorage.setItem("access_token", json.data.accessToken)
@@ -74,13 +73,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     Authorization: `Bearer ${json.data.accessToken}`,
                 },
             })
+            if (userRes.status !== 200) return false
+            const data = await userRes.json()
 
-            if (userRes.ok) {
-                const data = await userRes.json()
-                setUser(data.user)
+            if (data.isOk) {
+                setUser(json.data)
+                return true
+            } else {
+                setUser(null)
+                return false
             }
-
-            return true
         } catch {
             return false
         }
@@ -89,7 +91,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = () => {
         localStorage.removeItem("access_token")
         setUser(null)
-        redirect(`${process.env.NEXT_PUBLIC_APP_URI}/login`)
     };
 
     return (

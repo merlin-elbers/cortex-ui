@@ -1,15 +1,19 @@
 import datetime
 import os
+
+from starlette.requests import Request
 from uuid6 import uuid7
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
-from application.modules.database_models import User, GetUser, CreateUser
+from application.modules.database_models import User, GetUser, CreateUser, LoginStatus
 from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse
-from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password
+from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password, \
+    log_login_attempt
 
 router = APIRouter()
+
 
 @router.get("/me",
             status_code=200,
@@ -44,7 +48,7 @@ router = APIRouter()
                 }
             })
 async def get_me(
-    user = Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
     return AuthResponse(
         isOk=True,
@@ -90,16 +94,20 @@ async def get_me(
                  }
              })
 async def post_login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
     user = await User.find_one(User.email == form_data.username)
     if not user or (user and not verify_password(form_data.password, user.password)) or (user and not user.isActive):
+        if user and not verify_password(form_data.password, user.password):
+            await log_login_attempt(request, user.uid, LoginStatus.failed)
         raise GeneralException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             status="UNAUTHORIZED",
             exception="User not found, inactive or incorrect password",
             is_ok=False
         )
+    await log_login_attempt(request, user.uid, LoginStatus.success)
     return AuthResponse(
         isOk=True,
         status="OK",
@@ -191,4 +199,3 @@ async def post_signup(
         status="OK",
         message="Benutzer erfolgreich erstellt"
     )
-
