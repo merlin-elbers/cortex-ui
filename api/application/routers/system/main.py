@@ -7,11 +7,68 @@ from time import perf_counter
 import os
 from starlette.responses import FileResponse
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
-    BaseResponse, GeneralExceptionSchema
+    BaseResponse, GeneralExceptionSchema, PingResponse
 from application.modules.utils.database_models import UserRole
 from application.routers.auth.utils import require_role
 
 router = APIRouter()
+
+
+@router.get('/ping',
+            name="MongoDB Verbindung prüfen (ohne Authentifizierung)",
+            description="""
+                Führt einen schnellen Health-Check gegen die MongoDB-Datenbank aus und prüft, ob eine Verbindung erfolgreich aufgebaut werden kann.
+            """,
+            response_description="Verbindungsstatus zur MongoDB",
+            tags=["🔍 System"],
+            status_code=200,
+            responses={
+                200: {
+                    'model': PingResponse,
+                    'description': 'Verbindung erfolgreich hergestellt'
+                },
+                422: {
+                    'model': ValidationError,
+                    'description': 'Validierungsfehler in der Anfrage'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'MongoDB ist nicht erreichbar oder meldet einen Fehler'
+                }
+            })
+async def ping():
+    uri = os.getenv("MONGODB_URI")
+    if not uri:
+        raise GeneralException(
+            exception="Keine MONGODB_URI in der .env gefunden",
+            status_code=500,
+            status="NO_URI",
+            is_ok=False
+        )
+
+    client = AsyncIOMotorClient(uri)
+
+    try:
+        start = perf_counter()
+        result = await client.admin.command("ping")
+        duration = (perf_counter() - start) * 1000
+
+        if result.get("ok") == 1:
+            return PingResponse(
+                isOk=True,
+                status="OK",
+                message="Verbindung OK",
+                latencyMs=round(duration, 2)
+            )
+        raise Exception("Ping fehlgeschlagen")
+
+    except Exception as e:
+        raise GeneralException(
+            exception=f"Fehler beim Verbindungsaufbau zur MongoDB. {str(e)}",
+            status_code=500,
+            status="DB_HEALTH_ERROR",
+            is_ok=False
+        )
 
 
 @router.get("/database-health",
@@ -45,7 +102,7 @@ router = APIRouter()
                 }
             })
 async def mongodb_health(
-    _user = Depends(require_role(UserRole.admin))
+    _user=Depends(require_role(UserRole.admin))
 ):
     uri = os.getenv("MONGODB_URI")
     database_name = os.getenv("MONGODB_DB_NAME")

@@ -98,12 +98,15 @@ class UsersResponse(BaseResponse):
     activeUsers: int
 
 
-class DbHealthResponse(BaseResponse):
+class PingResponse(BaseResponse):
+    latencyMs: float
+
+
+class DbHealthResponse(PingResponse):
     dbName: str
     serverVersion: str
     uptimeSeconds: float | int
     connectionCount: int
-    latencyMs: float
     indexes: int | str
     storageSizeMB: float
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react';
 import {redirect} from "next/navigation";
 import Link from "next/link";
@@ -8,6 +8,8 @@ import {useAuth} from "@/context/AuthContext";
 import Image from "next/image";
 import CortexUI from "@/assets/CortexUI.png"
 import Loader from "@/components/Loader";
+import Bus from "@/lib/bus";
+import {usePing} from "@/hooks/use-ping";
 
 const Login = () => {
     const { isAuthenticated, loading, login } = useAuth()
@@ -15,6 +17,18 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    
+    const { isOnline, errorMessage, lastChecked } = usePing();
+
+    useEffect(() => {
+        if (isOnline === false && lastChecked < new Date()) {
+            Bus.emit("notification", {
+                title: "Verbindung fehlgeschlagen",
+                message: errorMessage,
+                categoryName: "warning"
+            });
+        }
+    }, [errorMessage, isOnline, lastChecked]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -36,6 +50,7 @@ const Login = () => {
             setIsLoading(false)
         }, 1500);
     }
+
     if (loading) return <Loader />
 
     return !isAuthenticated ? (

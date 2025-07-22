@@ -3,6 +3,7 @@ import "./globals.css";
 import React from "react";
 import {AuthProvider} from "@/context/AuthContext";
 import AdminSidebar from "@/components/AdminSidebar";
+import Notifications from "@/lib/notifications";
 
 export const metadata: Metadata = {
     title: "Cortex UI",
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <body className={`antialiased`}>
                 <AuthProvider>
                     <div className={"min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex"}>
+                        <Notifications />
                         <AdminSidebar />
                         <main className={"flex-1 overflow-auto"}>
                             {children}
