@@ -1,26 +1,21 @@
+import os
+from dotenv import load_dotenv
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware import Middleware
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from application.modules.connection import init_db, lifespan
+from application.modules.utils.connection import init_db, lifespan
 
 
 class Application:
     def __init__(self, trusted_domains: list[str]):
-        self.__api_version: str = "v1"
-        self.__middleware: list[Middleware] = [
-            Middleware(
-                CORSMiddleware,
-                allow_origins=trusted_domains,
-                allow_credentials=True,
-                allow_methods=['*'],
-                allow_headers=['*']
-            )
-        ]
+        load_dotenv()
+
+        self.__api_prefix: str = os.getenv("API_PREFIX", "/api/v1")
         self.__app: FastAPI = FastAPI(
-            middleware=self.__middleware,
+            middleware=self._build_middleware(trusted_domains),
             title="CortexUI - API Docs",
             lifespan=lifespan,
             description="""
@@ -50,7 +45,7 @@ class Application:
                 Kurz gesagt:  
                 CortexUI ist dein smartes Control Center für Inhalte, Nutzer und Insights – sicher, modular und Open Source. 🧠💻
             """,
-            version="1.0.0",
+            version=os.getenv("VERSION", "1.0.0"),
             contact={
                 "name": "CortexUI by elbers.dev",
                 "email": "merlin@elbers.dev",
@@ -60,14 +55,33 @@ class Application:
         self.__init_routes()
         self.__init_handlers()
 
+    @staticmethod
+    def _build_middleware(trusted_domains: list[str]) -> list[Middleware]:
+        return [
+            Middleware(
+                CORSMiddleware, # type: ignore[arg-type]
+                allow_origins=trusted_domains,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+        ]
+
     @property
     def app(self) -> FastAPI:
         return self.__app
 
     def __init_routes(self):
-        from application.routers import auth
+        from application.routers import auth, users, health
 
-        self.__app.include_router(auth.router, prefix=f"/api/{self.__api_version}/auth")
+        routers = [
+            (auth.router, "/auth"),
+            (users.router, ""),
+            (health.router, "/health"),
+        ]
+
+        for router, prefix in routers:
+            self.__app.include_router(router, prefix=f"{self.__api_prefix or ''}{prefix}")
 
 
     def __init_handlers(self):
@@ -91,17 +105,14 @@ class Application:
                 error['exception'] = error.pop('msg')
                 error['errorType'] = error.pop('type')
                 error['location'] = error.pop('loc')
-                try:
-                    error.pop('url')
-                    error.pop('input')
-                except KeyError:
-                    pass
+                error.pop("url", None)
+                error.pop("input", None)
             return JSONResponse(
                 status_code=422,
                 content={
                     "isOk": False,
                     "status": "VALIDATION_ERROR",
                     "message": exc.errors(),
-                    "requestedUrl": f"{request.url}"
+                    "requestedUrl": str(request.url)
                 }
             )

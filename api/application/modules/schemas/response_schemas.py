@@ -1,7 +1,7 @@
 from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
-from application.modules.database_models import GetUser
+from application.modules.utils.database_models import GetUser
 
 
 # region Response Schemas
@@ -80,5 +80,15 @@ class UsersResponse(BaseResponse):
     todaysLogins: int
     administrators: int
     activeUsers: int
+
+
+class DbHealthResponse(BaseResponse):
+    dbName: str
+    serverVersion: str
+    uptimeSeconds: float | int
+    connectionCount: int
+    latencyMs: float
+    indexes: int | str
+    storageSizeMB: float
 
 # endregion

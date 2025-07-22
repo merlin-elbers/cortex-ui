@@ -1,6 +1,6 @@
 import datetime
 from fastapi import APIRouter, Depends
-from application.modules.database_models import User, GetUser, UserRole, Logins
+from application.modules.utils.database_models import User, GetUser, UserRole, Logins
 from application.modules.schemas.response_schemas import ValidationError, UsersResponse
 from application.routers.auth.utils import require_role
 

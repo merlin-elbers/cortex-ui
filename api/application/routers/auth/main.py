@@ -1,13 +1,12 @@
 import datetime
 import os
-
 from starlette.requests import Request
 from uuid6 import uuid7
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
-from application.modules.database_models import User, GetUser, CreateUser, LoginStatus
+from application.modules.utils.database_models import User, GetUser, CreateUser, LoginStatus, UserRole
 from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse
 from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password, \
     log_login_attempt
@@ -189,7 +188,7 @@ async def post_signup(
         firstName=new_user.firstName,
         lastName=new_user.lastName,
         isActive=False,
-        role="viewer",
+        role=UserRole.viewer,
         lastSeen=datetime.datetime.now()
     )
     await new_user.create()

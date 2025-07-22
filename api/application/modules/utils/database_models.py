@@ -1,6 +1,6 @@
 import datetime
 from typing import Optional
-from beanie import Document
+from beanie import Document, Indexed
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -33,8 +33,8 @@ class UserRole(Enum):
 
 
 class User(Document):
-    uid: str
-    email: str
+    uid: Indexed(str, unique=True)
+    email: Indexed(str, unique=True)
     password: str
     firstName: str
     lastName: str
@@ -67,11 +67,10 @@ class Logins(Document):
 
     class Config:
         json_schema_extra = {
-          "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
-          "email": "demo@cortex.ui",
+          "userUid": "01981d65-0881-786d-8e00-b7b25f19c88f",
           "timestamp": "2025-07-21T09:13:00Z",
-          "ip": "91.11.234.56",
-          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64...)",
+          "ipAddress": "91.11.234.56",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64...)",
           "status": True
         }
 

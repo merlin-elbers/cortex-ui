@@ -1,0 +1,31 @@
+[2025-07-22 09:21:53,819] CRITICAL — ❌ Kein MONGODB_URI gefunden – Startup abgebrochen.
+[2025-07-22 09:21:53,819] ERROR — ❌ Fehler beim Initialisieren der MongoDB: MongoDB URI fehlt in der .env (.env → MONGODB_URI)
+[2025-07-22 09:22:54,079] CRITICAL — ❌ Kein MONGODB_URI gefunden – Startup abgebrochen.
+[2025-07-22 09:22:54,080] ERROR — ❌ Fehler beim Initialisieren der MongoDB: MongoDB URI fehlt in der .env (.env → MONGODB_URI)
+[2025-07-22 09:23:09,357] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: 
+[2025-07-22 09:23:09,540] ERROR — ❌ Fehler beim Initialisieren der MongoDB: database name cannot be the empty string
+[2025-07-22 09:23:47,791] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:23:47,831] ERROR — ❌ Fehler beim Initialisieren der MongoDB: ensure_indexes
+[2025-07-22 09:26:09,405] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:26:09,481] ERROR — ❌ Fehler beim Initialisieren der MongoDB: ensure_indexes
+[2025-07-22 09:27:38,499] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:27:38,546] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:27:38,546] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:34:39,736] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:34:39,931] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:34:39,931] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:40:00,370] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:40:00,403] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:40:00,404] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:40:08,705] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:40:08,742] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:40:08,742] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:40:42,398] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:40:42,436] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:40:42,437] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:41:02,893] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:41:02,919] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:41:02,919] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 09:41:15,924] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 09:41:15,958] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 09:41:15,958] INFO — ✅ MongoDB initialisiert.

@@ -4,8 +4,7 @@ import os
 from dotenv import load_dotenv
 from jose import jwt, JWTError
 from starlette.requests import Request
-
-from application.modules.database_models import User, UserRole, Logins, LoginStatus
+from application.modules.utils.database_models import User, UserRole, Logins, LoginStatus
 from application.modules.schemas.response_schemas import GeneralException
 from application.routers.auth.dependencies import oauth2_scheme
 from fastapi import Depends, status
