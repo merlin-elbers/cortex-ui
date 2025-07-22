@@ -72,12 +72,12 @@ class Application:
         return self.__app
 
     def __init_routes(self):
-        from application.routers import auth, users, health
+        from application.routers import auth, users, system
 
         routers = [
             (auth.router, "/auth"),
             (users.router, ""),
-            (health.router, "/health"),
+            (system.router, "/system"),
         ]
 
         for router, prefix in routers:

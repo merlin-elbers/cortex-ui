@@ -1,7 +1,8 @@
 from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
-from application.modules.utils.database_models import GetUser
+
+from application.modules.utils.schemas import GetUser
 
 
 # region Response Schemas
@@ -12,6 +13,21 @@ class GeneralException(Exception):
         self.status_code = status_code
         self.isOk = is_ok
         self.status = status
+
+
+class GeneralExceptionSchema(BaseModel):
+    isOk: Annotated[bool, Path(
+        title='Status',
+        description='Zeigt an, ob die CRUD-Operation erfolgreich war')
+    ] = False
+    status: Annotated[str, Path(
+        title='Statuscode',
+        description='Systeminterner Statuscode')
+    ] = "FAILED"
+    exception: Annotated[str, Path(
+        title='Statusnachricht',
+        description='Diese Nachricht beschreibt den Statuscode oder die CRUD-Operation näher')
+    ] = "Fehler in der Anfrage"
 
 
 class BaseResponse(BaseModel):
@@ -90,5 +106,10 @@ class DbHealthResponse(BaseResponse):
     latencyMs: float
     indexes: int | str
     storageSizeMB: float
+
+
+class BackupResponse(BaseResponse):
+    fileName: str
+
 
 # endregion

@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
-from application.modules.utils.database_models import User, GetUser, CreateUser, LoginStatus, UserRole
-from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse
+from application.modules.utils.database_models import User, LoginStatus
+from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse, \
+    GeneralExceptionSchema
+from application.modules.utils.schemas import GetUser, CreateUserSelf
 from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password, \
     log_login_attempt
 
@@ -42,7 +44,7 @@ router = APIRouter()
                     'description': 'Validierungsfehler in der Anfrage'
                 },
                 500: {
-                    'model': ValidationError,
+                    'model': GeneralExceptionSchema,
                     'description': 'Interner Serverfehler während der Verarbeitung der Daten'
                 }
             })
@@ -88,7 +90,7 @@ async def get_me(
                      'description': 'Validierungsfehler in der Anfrage'
                  },
                  500: {
-                     'model': ValidationError,
+                     'model': GeneralExceptionSchema,
                      'description': 'Interner Serverfehler während der Verarbeitung der Daten'
                  }
              })
@@ -151,12 +153,12 @@ async def post_login(
                      'description': 'Validierungsfehler in der Anfrage'
                  },
                  500: {
-                     'model': ValidationError,
+                     'model': GeneralExceptionSchema,
                      'description': 'Interner Serverfehler während der Verarbeitung der Daten'
                  }
              })
 async def post_signup(
-    new_user: CreateUser
+    new_user: CreateUserSelf
 ):
     load_dotenv()
 
@@ -188,7 +190,7 @@ async def post_signup(
         firstName=new_user.firstName,
         lastName=new_user.lastName,
         isActive=False,
-        role=UserRole.viewer,
+        role='viewer',
         lastSeen=datetime.datetime.now()
     )
     await new_user.create()

@@ -1,7 +1,7 @@
 import datetime
-from typing import Optional
+from typing import Optional, Literal
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
+from pydantic import Field
 from enum import Enum
 
 
@@ -38,9 +38,9 @@ class User(Document):
     password: str
     firstName: str
     lastName: str
-    role: UserRole = Field(default=UserRole.viewer)
+    role: Literal["viewer", "writer", "editor", "admin"] = Field(default=UserRole.viewer.label)
     isActive: bool
-    lastSeen: datetime.datetime
+    lastSeen: Optional[datetime.datetime] = None
 
     class Settings:
         name = "Users"
@@ -65,6 +65,9 @@ class Logins(Document):
     userAgent: str
     status: LoginStatus
 
+    class Settings:
+        name = "Logins"
+
     class Config:
         json_schema_extra = {
           "userUid": "01981d65-0881-786d-8e00-b7b25f19c88f",
@@ -73,54 +76,3 @@ class Logins(Document):
           "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64...)",
           "status": True
         }
-
-
-class GetUser(BaseModel):
-    uid: str
-    email: str
-    firstName: str
-    lastName: str
-    role: str
-    isActive: bool
-    lastSeen: datetime.datetime
-    accessToken: str | None
-
-    class Config:
-        json_schema_extra = {
-            "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
-            "email": "john.doe@cortex.ui",
-            "password": "John.Doe1092!",
-            "firstName": "John",
-            "lastName": "Doe",
-            "role": "admin",
-            "isActive": True,
-            "lastSeen": datetime.datetime.now(),
-            "accessToken": "<BEARER TOKEN>",
-        }
-
-
-class CreateUser(BaseModel):
-    email: str
-    password: str
-    firstName: Optional[str]
-    lastName: Optional[str]
-
-
-class UpdateUser(BaseModel):
-    email: Optional[str]
-    password: Optional[str]
-    firstName: Optional[str]
-    lastName: Optional[str]
-    role: Optional[str]
-    isActive: Optional[bool]
-
-    class Config:
-        json_schema_extra = {
-            "email": "john.doe@cortex.ui",
-            "password": "John.Doe1092!",
-            "firstName": "John",
-            "lastName": "Doe",
-            "role": "admin",
-            "isActive": True,
-        }
-

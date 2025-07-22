@@ -29,3 +29,27 @@
 [2025-07-22 09:41:15,924] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
 [2025-07-22 09:41:15,958] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
 [2025-07-22 09:41:15,958] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:08:14,744] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:08:14,952] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:08:14,952] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:08:58,874] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:08:58,908] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:08:58,908] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:11:18,347] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:11:18,383] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:11:18,383] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:26:28,345] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:26:28,532] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:26:28,532] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:27:37,232] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:27:37,249] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:27:37,249] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:29:30,062] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:29:30,078] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:29:30,078] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 16:32:07,795] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 16:32:07,813] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 16:32:07,814] INFO — ✅ MongoDB initialisiert.
+[2025-07-22 17:00:17,505] INFO — 🔌 Verbindung zu MongoDB wird aufgebaut → mongodb://localhost:27017 / DB: cortex-ui
+[2025-07-22 17:00:17,717] INFO — ✅ Beanie Models registriert & Indexe sichergestellt.
+[2025-07-22 17:00:17,717] INFO — ✅ MongoDB initialisiert.
