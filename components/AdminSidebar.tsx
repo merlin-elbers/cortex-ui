@@ -13,13 +13,26 @@ import {usePathname} from "next/navigation";
 import Link from "next/link";
 import CortexUI from "@/assets/CortexUI.png";
 import {useAuth} from "@/context/AuthContext";
-import getRoleValue from "@/functions/roleValues";
 import Image from "next/image";
 import Loader from "@/components/Loader";
 
 const AdminSidebar = () => {
     const location = usePathname();
     const { user, isAuthenticated, loading, logout } = useAuth()
+
+    const getRoleValue = (roleName: string) => {
+        try {
+            const roleValues = {
+                viewer: 0,
+                writer: 1,
+                editor: 2,
+                admin: 3
+            }
+            return roleValues[roleName as keyof typeof roleValues];
+        } catch {
+            return 0;
+        }
+    }
 
     const menuItems = [
         { path: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true, roleRequired: 'viewer' },

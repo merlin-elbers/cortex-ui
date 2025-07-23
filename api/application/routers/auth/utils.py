@@ -89,8 +89,12 @@ def require_role(required_roles: Union[str, UserRole, List[Union[str, UserRole]]
     min_required_level = max(role.level for role in resolved_roles)
 
     async def checker(user: User = Depends(get_current_user)):
+
         try:
-            role_enum = user.role if isinstance(user.role, UserRole) else UserRole(user.role)
+            role_enum = UserRole.viewer
+            for role in UserRole:
+                if str(role) == user.role:
+                    role_enum = UserRole(role)
         except ValueError:
             raise GeneralException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -98,7 +102,6 @@ def require_role(required_roles: Union[str, UserRole, List[Union[str, UserRole]]
                 exception=f"Ungültige Rolle im Benutzerobjekt: {user.role}",
                 is_ok=False
             )
-
         if role_enum.level < min_required_level:
             raise GeneralException(
                 status_code=status.HTTP_403_FORBIDDEN,

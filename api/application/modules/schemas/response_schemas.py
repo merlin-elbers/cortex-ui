@@ -115,4 +115,9 @@ class BackupResponse(BaseResponse):
     fileName: str
 
 
+class MicrosoftResponse(BaseResponse):
+    email: str
+    displayName: str
+
+
 # endregion

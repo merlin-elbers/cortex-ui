@@ -1,14 +1,18 @@
 import datetime
+import json
 import subprocess
 from pathlib import Path
+import requests
+import uuid6
 from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from time import perf_counter
 import os
 from starlette.responses import FileResponse
+from application.modules.schemas.request_schemas import M365TokenRequest
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
-    BaseResponse, GeneralExceptionSchema, PingResponse
-from application.modules.utils.database_models import UserRole
+    BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse
+from application.modules.utils.database_models import UserRole, Microsoft365
 from application.routers.auth.utils import require_role
 
 router = APIRouter()
@@ -271,3 +275,101 @@ async def get_latest_backup(
         filename=backups[0].name,
         media_type="application/gzip"
     )
+
+
+@router.post("/token",
+            status_code=200,
+            name="Microsoft 365 Token speichern",
+            tags=["🔍 System"],
+            description="""
+                Verarbeitet den Microsoft Authorization Code und tauscht ihn gegen ein Access + Refresh Token.
+                Token wird gespeichert und ist bereit für weitere API-Nutzung mit O365 (z. B. Mailversand).
+            """,
+            response_description="Zugriffstoken gespeichert",
+            responses={
+                200: {
+                    'model': BaseResponse,
+                    'description': 'Zugriffstoken gespeichert'
+                },
+                400: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Verarbeiten des Codes'
+                },
+                422: {
+                    'model': ValidationError,
+                    'description': 'Validierungsfehler in der Anfrage'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Interner Serverfehler während der Verarbeitung der Daten'
+                }
+            })
+async def receive_m365_token(data: M365TokenRequest):
+    token_path = Path("tokens")
+    token_path.mkdir(parents=True, exist_ok=True)
+    token_file = token_path / "mail_token.json"
+
+    token_url = f"https://login.microsoftonline.com/{data.tenantId}/oauth2/v2.0/token"
+
+    try:
+        res = requests.post(
+            token_url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={
+                "client_id": data.clientId,
+                "scope": "offline_access User.Read Mail.Send",
+                "code": data.code,
+                "redirect_uri": data.redirect_uri,
+                "grant_type": "authorization_code",
+                "client_secret": data.clientSecret,
+            }
+        )
+
+        if res.status_code != 200:
+            raise GeneralException(
+                is_ok=False,
+                status="TOKEN_EXCHANGE_FAILED",
+                exception=f"Tokenabruf fehlgeschlagen: {res.text}",
+                status_code=500
+            )
+
+        token_data = res.json()
+
+        access_token = token_data.get("access_token")
+        user_info = requests.get(
+            "https://graph.microsoft.com/v1.0/me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        user_json = user_info.json()
+
+        await Microsoft365.find_all().delete()
+
+        new_configuration = Microsoft365(
+            uid=uuid6.uuid7().__str__(),
+            displayName=user_json.get("displayName"),
+            email=user_json.get("mail"),
+            clientId=data.clientId,
+            clientSecret=data.clientSecret,
+            tenantId=data.tenantId,
+        )
+
+        await new_configuration.create()
+
+        with open(token_file, "w") as f:
+            json.dump(token_data, f)
+
+        return MicrosoftResponse(
+            isOk=True,
+            status="TOKEN_STORED",
+            message="Token erfolgreich gespeichert",
+            email=user_json.get("mail"),
+            displayName=user_json.get("displayName")
+        )
+
+    except Exception as e:
+        raise GeneralException(
+            is_ok=False,
+            status="TOKEN_SAVE_ERROR",
+            exception=str(e),
+            status_code=500
+        )

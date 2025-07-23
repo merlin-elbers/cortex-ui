@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
         <html lang="de">
-            <body className={`antialiased`}>
+            <body className={`antialiased bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50`}>
                 <AuthProvider>
-                    <div className={"min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex"}>
+                    <div className={"min-h-screen flex"}>
                         <Notifications />
                         <AdminSidebar />
                         <main className={"flex-1 overflow-auto"}>

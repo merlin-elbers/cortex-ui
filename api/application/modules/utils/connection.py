@@ -4,7 +4,7 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from application.modules.utils.database_models import User, Logins
+from application.modules.utils.database_models import User, Logins, Microsoft365
 from application.modules.utils.logger import get_logger
 
 load_dotenv()
@@ -37,7 +37,7 @@ async def init_db():
 
     await init_beanie(
         database=db,
-        document_models=[User, Logins],
+        document_models=[User, Logins, Microsoft365],
     )
 
     logger.info("✅ Beanie Models registriert & Indexe sichergestellt.")

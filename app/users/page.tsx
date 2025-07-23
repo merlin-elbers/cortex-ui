@@ -66,7 +66,7 @@ const AdminUsers = () => {
                 .then(res => res.json())
                 .then(json => {
                     if (json.isOk) {
-                        setUsers(json.users)
+                        setUsers(json.data)
                         setTodaysLogins(json.todaysLogins)
                         setActiveUsers(json.activeUsers)
                         setAdministrators(json.administrators)
@@ -189,7 +189,7 @@ const AdminUsers = () => {
                                             <User className={"h-4 w-4 text-indigo-400"} />
                                         </div>
                                         <div>
-                                            <p className={"text-white font-medium"}>
+                                            <p className={"text-slate-900 font-medium"}>
                                                 {dbUser.firstName} {dbUser.lastName}
                                             </p>
                                             <p className={"text-gray-400 text-sm"}>
@@ -216,14 +216,14 @@ const AdminUsers = () => {
                                     </span>
                                 </td>
                                 <td className={"p-4"}>
-                                    <span className={"text-gray-300"}>
+                                    <span className={"text-gray-500"}>
                                         {dbUser.lastSeen ? new Date(dbUser.lastSeen).toLocaleString() : '---'}
                                     </span>
                                 </td>
                                 <td className={"p-4"}>
                                     <div className={"flex items-center gap-2"}>
                                         <button
-                                            className={"bg-blue-500/20 text-blue-400 p-2 rounded-lg hover:bg-blue-500/30 transition-colors"}
+                                            className={"cursor-pointer bg-blue-500/20 text-blue-400 p-2 rounded-lg hover:bg-blue-500/30 transition-colors"}
                                             onClick={() => {
                                                 setEditingUser(dbUser)
                                                 setShowForm(true)

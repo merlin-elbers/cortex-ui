@@ -76,3 +76,16 @@ class Logins(Document):
           "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64...)",
           "status": True
         }
+
+
+class Microsoft365(Document):
+    uid: Indexed(str, unique=True)
+    email: str
+    displayName: str
+    clientId: str
+    clientSecret: str
+    tenantId: str
+    createdAt: datetime.datetime = Field(default_factory=datetime.datetime.now)
+
+    class Settings:
+        name = "Microsoft365"

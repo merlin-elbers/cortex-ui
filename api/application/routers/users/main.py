@@ -54,15 +54,18 @@ async def get_users(
     now = datetime.datetime.now()
     from_today = datetime.datetime(now.year, now.month, now.day)
 
-    todays_logins = await Logins.find(Logins.createdAt >= from_today).count()
+    todays_logins = await Logins.find(Logins.timestamp >= from_today).count()
     admin_count = await User.find(User.role == "admin").count()
-    active_users = await User.find(User.is_active.is_(True)).count()
+    active_users = await User.find(User.isActive == True).count()
 
     return UsersResponse(
         isOk=True,
         status="OK",
         message="Benutzer gefunden",
-        data=[GetUser(accessToken=None, **user.model_dump(exclude={"password"})) for user in users],
+        data=[GetUser(
+            accessToken=None,
+            **user.model_dump(exclude={"password"})
+        ) for user in users],
         todaysLogins=todays_logins,
         administrators=admin_count,
         activeUsers=active_users

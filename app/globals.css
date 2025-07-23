@@ -69,6 +69,13 @@ body {
 .leave {
   animation: leaveAnimation .4s linear forwards;
 }
+.fade-in {
+  animation: fadeInAnimation .5s ease-in-out forwards;
+}
+.open-radio {
+  animation: openRadioAnimation .3s ease-in-out forwards;
+  overflow: hidden;
+}
 @keyframes enterAnimation {
   from {
     opacity: 0;
@@ -85,5 +92,24 @@ body {
   }
   to {
     transform: translateX(200%);
+  }
+}
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(-2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes openRadioAnimation {
+  from {
+    height: 0;
+  }
+  to {
+    height: 450px;
   }
 }

@@ -39,7 +39,7 @@ export default function Notifications() {
     }, [])
     return (
         visible && (
-            <div className={"flex max-w-[420px] w-96 p-4 gap-2 flex-col-reverse z-[100] top-0 right-0 fixed group"}>
+            <div className={"flex max-w-[420px] w-96 p-4 gap-2 flex-col-reverse z-[105] top-0 right-0 fixed group"}>
                 <div className={`select-none transition-all enter ${toggleAnimation ? 'leave' : ''} gap-2 backdrop-blur-sm shadow-lg pr-7 p-4 border rounded-lg overflow-hidden items-center flex w-full relative 
                 ${category === 'info' ? 'bg-blue-500/20 border-blue-300 text-blue-900' : 
                     category === 'success' ? 'bg-lime-500/20 border-lime-300 text-green-900' : 
