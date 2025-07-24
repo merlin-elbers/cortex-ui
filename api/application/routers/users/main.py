@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, Path
 from starlette import status
 from starlette.responses import Response
 from uuid6 import uuid7
-from application.modules.utils.database_models import User, UserRole, Logins
+from application.modules.database.database_models import User, UserRole, Logins
 from application.modules.schemas.response_schemas import ValidationError, UsersResponse, BaseResponse, GeneralException, \
     GeneralExceptionSchema
-from application.modules.utils.schemas import UpdateUser, GetUser, CreateUserAdmin
+from application.modules.schemas.schemas import UpdateUser, GetUser, CreateUserAdmin
 from application.routers.auth.utils import require_role, hash_password
 
 router = APIRouter()

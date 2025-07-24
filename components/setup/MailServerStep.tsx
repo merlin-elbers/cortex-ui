@@ -129,7 +129,7 @@ export const MailServerStep: React.FC<MailServerStepProps> = ({ data, updateData
                     <Mail className={"w-8 h-8 text-indigo-500"} />
                 </div>
                 <h2 className={"text-xl font-semibold mb-2"}>
-                    E-Mail-Konfiguration
+                    E-Mail-Konfiguration {!data.adminUser.emailVerification && '(optional)'}
                 </h2>
                 <p className={"text-gray-500 text-sm"}>
                     Konfigurieren Sie Ihren SMTP-Server oder Microsoft 365 für E-Mail-Versand.

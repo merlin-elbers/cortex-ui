@@ -1,19 +1,19 @@
-import os
-from dotenv import load_dotenv
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware import Middleware
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from application.modules.utils.connection import init_db, lifespan
+from application.modules.setup.setup_guard import SetupGuardMiddleware
+from application.modules.database.connection import init_db, lifespan
 
 
 class Application:
     def __init__(self, trusted_domains: list[str]):
-        load_dotenv()
+        from application.modules.utils.settings import get_settings
+        settings = get_settings()
 
-        self.__api_prefix: str = os.getenv("API_PREFIX", "/api/v1")
+        self.__api_prefix: str = settings.API_PREFIX or "/api/v1"
         self.__app: FastAPI = FastAPI(
             middleware=self._build_middleware(trusted_domains),
             title="CortexUI - API Docs",
@@ -45,7 +45,7 @@ class Application:
                 Kurz gesagt:  
                 CortexUI ist dein smartes Control Center für Inhalte, Nutzer und Insights – sicher, modular und Open Source. 🧠💻
             """,
-            version=os.getenv("VERSION", "1.0.0"),
+            version=settings.VERSION or "1.0.0",
             contact={
                 "name": "CortexUI by elbers.dev",
                 "email": "merlin@elbers.dev",
@@ -58,6 +58,7 @@ class Application:
     @staticmethod
     def _build_middleware(trusted_domains: list[str]) -> list[Middleware]:
         return [
+            Middleware(SetupGuardMiddleware), # type: ignore[arg-type]
             Middleware(
                 CORSMiddleware, # type: ignore[arg-type]
                 allow_origins=trusted_domains,
@@ -72,12 +73,13 @@ class Application:
         return self.__app
 
     def __init_routes(self):
-        from application.routers import auth, users, system
+        from application.routers import auth, users, system, setup
 
         routers = [
             (auth.router, "/auth"),
             (users.router, ""),
             (system.router, "/system"),
+            (setup.router, "/setup"),
         ]
 
         for router, prefix in routers:

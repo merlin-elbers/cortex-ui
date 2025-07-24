@@ -6,10 +6,11 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
-from application.modules.utils.database_models import User, LoginStatus
+from application.modules.database.database_models import User, LoginStatus
 from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse, \
     GeneralExceptionSchema
-from application.modules.utils.schemas import GetUser, CreateUserSelf
+from application.modules.schemas.schemas import GetUser, CreateUserSelf
+from application.modules.utils.settings import get_settings
 from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password, \
     log_login_attempt
 
@@ -160,9 +161,9 @@ async def post_login(
 async def post_signup(
     new_user: CreateUserSelf
 ):
-    load_dotenv()
+    settings = get_settings()
 
-    if os.getenv('SELF_SIGNUP') == 'false':
+    if not settings.SELF_SIGNUP:
         raise GeneralException(
             status_code=status.HTTP_403_FORBIDDEN,
             status="FORBIDDEN",

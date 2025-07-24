@@ -3,7 +3,6 @@ import json
 import subprocess
 from pathlib import Path
 import requests
-import uuid6
 from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from time import perf_counter
@@ -11,8 +10,9 @@ import os
 from starlette.responses import FileResponse
 from application.modules.schemas.request_schemas import M365TokenRequest
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
-    BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse
-from application.modules.utils.database_models import UserRole, Microsoft365
+    BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse, WhiteLabelResponse
+from application.modules.database.database_models import UserRole, WhiteLabelConfig
+from application.modules.utils.settings import get_settings
 from application.routers.auth.utils import require_role
 
 router = APIRouter()
@@ -41,7 +41,9 @@ router = APIRouter()
                 }
             })
 async def ping():
-    uri = os.getenv("MONGODB_URI")
+    settings = get_settings()
+
+    uri = settings.MONGODB_URI
     if not uri:
         raise GeneralException(
             exception="Keine MONGODB_URI in der .env gefunden",
@@ -108,8 +110,9 @@ async def ping():
 async def mongodb_health(
     _user=Depends(require_role(UserRole.admin))
 ):
-    uri = os.getenv("MONGODB_URI")
-    database_name = os.getenv("MONGODB_DB_NAME")
+    settings = get_settings()
+
+    uri = settings.MONGODB_URI
     if not uri:
         raise GeneralException(
             exception="Keine MONGODB_URI in der .env gefunden",
@@ -127,13 +130,13 @@ async def mongodb_health(
 
         if result.get("ok") == 1:
             server_status = await client.admin.command("serverStatus")
-            db_stats = await client.get_database(database_name).command("dbstats")
+            db_stats = await client.get_database(settings.MONGODB_DB_NAME).command("dbstats")
 
             return DbHealthResponse(
                 isOk=True,
                 status="DB_HEALTH_OK",
                 message="Verbindungsstatus zur MongoDB OK",
-                dbName=database_name,
+                dbName=settings.MONGODB_DB_NAME,
                 serverVersion=server_status["version"],
                 uptimeSeconds=server_status["uptime"],
                 connectionCount=server_status["connections"]["current"],
@@ -185,6 +188,7 @@ async def mongodb_health(
 async def start_backup(
     _user=Depends(require_role("admin"))
 ):
+    settings = get_settings()
     now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
     filename = f"cortexui-backup-{now}.gz"
     backup_path = os.path.join(os.getcwd(), 'backups')
@@ -192,8 +196,7 @@ async def start_backup(
     if not backup_path:
         os.mkdir(backup_path)
 
-    uri = os.getenv("MONGODB_URI")
-    database_name = os.getenv("MONGODB_DB_NAME")
+    uri = settings.MONGODB_URI
     if not uri:
         raise GeneralException(
             exception="Keine MONGODB_URI in der .env gefunden",
@@ -206,7 +209,7 @@ async def start_backup(
         subprocess.run([
             "mongodump",
             f"--uri={uri}",
-            f"--db={database_name}",
+            f"--db={settings.MONGODB_DB_NAME}",
             f"--archive={os.path.join(backup_path, filename)}",
             "--gzip"
         ], check=True)
@@ -342,19 +345,6 @@ async def receive_m365_token(data: M365TokenRequest):
         )
         user_json = user_info.json()
 
-        await Microsoft365.find_all().delete()
-
-        new_configuration = Microsoft365(
-            uid=uuid6.uuid7().__str__(),
-            displayName=user_json.get("displayName"),
-            email=user_json.get("mail"),
-            clientId=data.clientId,
-            clientSecret=data.clientSecret,
-            tenantId=data.tenantId,
-        )
-
-        await new_configuration.create()
-
         with open(token_file, "w") as f:
             json.dump(token_data, f)
 
@@ -373,3 +363,48 @@ async def receive_m365_token(data: M365TokenRequest):
             exception=str(e),
             status_code=500
         )
+
+
+@router.get("/white-label",
+            status_code=200,
+            name="Microsoft 365 Token speichern",
+            tags=["🔍 System"],
+            description="""
+                Verarbeitet den Microsoft Authorization Code und tauscht ihn gegen ein Access + Refresh Token.
+                Token wird gespeichert und ist bereit für weitere API-Nutzung mit O365 (z. B. Mailversand).
+            """,
+            response_description="Zugriffstoken gespeichert",
+            responses={
+                200: {
+                    'model': BaseResponse,
+                    'description': 'Zugriffstoken gespeichert'
+                },
+                400: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Verarbeiten des Codes'
+                },
+                422: {
+                    'model': ValidationError,
+                    'description': 'Validierungsfehler in der Anfrage'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Interner Serverfehler während der Verarbeitung der Daten'
+                }
+            })
+async def get_white_label():
+    white_label_config = await WhiteLabelConfig.find_one()
+    if not white_label_config:
+        raise GeneralException(
+            is_ok=False,
+            status="CONFIG_NOT_FOUND",
+            exception=f"WhiteLabelConfig wurde nicht gefunden",
+            status_code=500
+        )
+    return WhiteLabelResponse(
+        isOk=True,
+        status="OK",
+        message=f"WhiteLabelConfig wurde gefunden",
+        logo=white_label_config.logo,
+        title=white_label_config.title,
+    )

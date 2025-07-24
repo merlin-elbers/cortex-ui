@@ -15,6 +15,9 @@ import {AnalyticsStep} from "@/components/setup/AnalyticsStep";
 import {LicenseStep} from "@/components/setup/LicenseStep";
 import Image from "next/image";
 import CortexUI from "@/assets/CortexUI.png"
+import Bus from "@/lib/bus";
+import {useAuth} from "@/context/AuthContext";
+import {redirect} from "next/navigation";
 
 const STEP_TITLES = [
     'Admin-Benutzer erstellen',
@@ -27,8 +30,10 @@ const STEP_TITLES = [
 ];
 
 export default function SetupWizard() {
+    const { refreshSetupCompleted } = useAuth()
     const [currentStep, setCurrentStep] = useState(0);
     const [activateAnimation, setActivateAnimation] = useState(true)
+    const [isSending, setIsSending] = useState(false);
     const [setupData, setSetupData] = useState<SetupData>({
         adminUser: {
             firstName: '',
@@ -76,6 +81,9 @@ export default function SetupWizard() {
             case 4:
                 return setupData.adminUser.emailVerification ?
                     ((setupData.mailServer.type === 'smtp' && setupData.mailServer.smtp?.tested) || (setupData.mailServer.type === 'microsoft365' && setupData.mailServer.microsoft365?.authenticated)) : true
+            case 5:
+                const isMatomoConfigured = (!!setupData.analytics.matomoSiteId || !!setupData.analytics.matomoApiKey || !!setupData.analytics.matomoUrl)
+                return isMatomoConfigured ? setupData.analytics.connectionTested : true;
             case 6:
                 return setupData.license.accepted
             default:
@@ -95,7 +103,9 @@ export default function SetupWizard() {
         }
     };
 
-    const transferConfig = () => {
+    const transferConfig = async () => {
+        if (isSending) return
+        setIsSending(true)
         const config = {
             ...setupData,
             generatedAt: new Date().toISOString(),
@@ -111,6 +121,39 @@ export default function SetupWizard() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/setup/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(setupData)
+            })
+            const json = await response.json()
+            if (json.isOk) {
+                Bus.emit('notification', {
+                    title: "Konfiguration erfolgreich übertragen",
+                    message: "Sie werden in 3 Sekunden automatisch zum Login weitergeleitet",
+                    categoryName: "success"
+                })
+                refreshSetupCompleted()
+                setTimeout(() => {
+                    redirect('/login')
+                }, 3000)
+            } else Bus.emit('notification', {
+                title: "Fehler beim Übertragen der Konfiguration",
+                message: "Überprüfen Sie die Logs des Servers oder probieren Sie es erneut",
+                categoryName: "error"
+            })
+        } catch (error) {
+            Bus.emit('notification', {
+                title: "Fehler beim Übertragen der Konfiguration",
+                message: `Überprüfen Sie die Logs des Servers oder probieren Sie es erneut. ${error as Error}`,
+                categoryName: "error"
+            })
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const renderStep = () => {
@@ -197,11 +240,11 @@ export default function SetupWizard() {
                     {currentStep === STEP_TITLES.length - 1 ? (
                         <Button
                             onClick={transferConfig}
-                            disabled={!canProceed()}
+                            disabled={!canProceed() || isSending}
                             className={"flex items-center gap-2"}
                         >
                             <span>
-                                Setup abschließen
+                                {isSending ? 'Übertrage Daten' : 'Setup abschließen'}
                             </span>
                             <CircleCheck className={"w-4 h-4"} />
                         </Button>

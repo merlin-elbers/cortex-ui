@@ -46,6 +46,8 @@ export interface SetupData {
     analytics: {
         matomoUrl?: string
         matomoSiteId?: string
+        matomoApiKey?: string
+        connectionTested?: boolean
     };
     license: {
         accepted: boolean

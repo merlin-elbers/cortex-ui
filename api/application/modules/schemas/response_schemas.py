@@ -2,7 +2,8 @@ from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
 
-from application.modules.utils.schemas import GetUser
+from application.modules.schemas.request_schemas import BrandingLogo
+from application.modules.schemas.schemas import GetUser
 
 
 # region Response Schemas
@@ -119,5 +120,13 @@ class MicrosoftResponse(BaseResponse):
     email: str
     displayName: str
 
+
+class SetupResponse(BaseResponse):
+    setupCompleted: bool
+
+
+class WhiteLabelResponse(BaseResponse):
+    logo: BrandingLogo
+    title: str
 
 # endregion

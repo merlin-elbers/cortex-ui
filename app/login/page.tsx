@@ -6,19 +6,20 @@ import {redirect} from "next/navigation";
 import Link from "next/link";
 import {useAuth} from "@/context/AuthContext";
 import Image from "next/image";
+import CortexSmall from "@/assets/CortexUI_small.png"
 import CortexUI from "@/assets/CortexUI.png"
 import Loader from "@/components/Loader";
 import Bus from "@/lib/bus";
 import {usePing} from "@/hooks/use-ping";
 
 const Login = () => {
-    const { isAuthenticated, loading, login } = useAuth()
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     
     const { isOnline, errorMessage, lastChecked } = usePing();
+    const { isAuthenticated, loading, login, setupCompleted, whiteLabelConfig } = useAuth()
 
     useEffect(() => {
         if (isOnline === false && lastChecked < new Date()) {
@@ -53,17 +54,38 @@ const Login = () => {
 
     if (loading) return <Loader />
 
+    if (!setupCompleted) {
+        redirect("/setup");
+    }
+
     return !isAuthenticated ? (
         <div
-            className={"min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center p-4"}>
+            className={"min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center p-4 relative"}>
             <div className={"w-full max-w-md"}>
                 <div className={"text-center mb-8"}>
-                    <Link href={"https://github.com/merlin-elbers/cortex-ui"}>
-                        <Image src={CortexUI} alt={"CortexUI"} className={"h-12 w-auto mx-auto mb-4"} />
-                    </Link>
-                    <p className={"text-gray-500"}>
-                        Melden Sie sich an, um Ihre Website zu verwalten
-                    </p>
+                    {!whiteLabelConfig.logo ? (
+                        <>
+                            <Link href={"https://github.com/merlin-elbers/cortex-ui"} target={"_blank"}>
+                                <Image src={CortexUI} alt={"CortexUI"} className={"h-12 w-auto mx-auto mb-4"} />
+                            </Link>
+                            <p className={"text-gray-500"}>
+                                Melden Sie sich an, um Ihre Website zu verwalten
+                            </p>
+                        </>
+                    ) : (
+                        <div className={"mb-4 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-lg p-2 flex flex-col gap-2"}>
+                            <Link href={"https://github.com/merlin-elbers/cortex-ui"} className={"flex gap-2 items-center justify-center"}>
+                                <Image src={whiteLabelConfig.logo.data ? whiteLabelConfig.logo.data : ""} width={500} height={500} alt={whiteLabelConfig.logo.name as string} className={"h-12 w-auto"} />
+                                <h1 className={"text-slate-900 text-2xl"}>
+                                    {whiteLabelConfig.title}
+                                </h1>
+                            </Link>
+                            <p className={"text-gray-500"}>
+                                Melden Sie sich an, um Ihre Website zu verwalten
+                            </p>
+                        </div>
+
+                    )}
                 </div>
 
                 <div className={"bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-lg p-8 shadow-2xl"}>
@@ -153,6 +175,12 @@ const Login = () => {
                     </div>
                 </div>
             </div>
+            <Link href={"https://github.com/merlin-elbers/cortex-ui"} target={"_blank"} className={"text-indigo-500 fixed bottom-4 left-0 right-0 mx-auto flex w-fit items-center gap-2 text-sm"}>
+                <span>
+                    Proudly presented to you by
+                </span>
+                <Image src={CortexSmall} alt={"CortexUI"} className={"h-6 w-auto"} />
+            </Link>
         </div>
     ) : redirect('/')
 };

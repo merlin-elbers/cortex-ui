@@ -69,7 +69,13 @@ export default function Notifications() {
                     </div>
                     <button
                         className={"opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md absolute top-1 right-1 cursor-pointer"}
-                        onClick={() => setVisible(!visible)}
+                        onClick={() => {
+                            setToggleAnimation(true)
+                            setTimeout(() => {
+                                setVisible(!visible)
+                                setToggleAnimation(false)
+                            }, 500)
+                        }}
                     >
                         <X className={`${category === "standard" ? "text-gray-600 hover:text-black" : "text-gray-600 hover:text-black"} transition-colors h-4 w-4`} />
                     </button>

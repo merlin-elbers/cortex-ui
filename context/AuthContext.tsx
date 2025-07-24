@@ -10,25 +10,55 @@ export type UserPublic = {
     role: string;
     isActive: boolean;
     lastSeen: Date | string;
-};
+}
+
+interface WhiteLabelConfig {
+    logo?: {
+        contentType?: string
+        name?: string
+        data?: string
+        lastModified?: string | number
+    },
+    title: string
+}
 
 type AuthContextType = {
     user: UserPublic | null;
     isAuthenticated: boolean;
+    setupCompleted: boolean;
     loading: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
-};
+    refreshSetupCompleted: () => void
+    whiteLabelConfig: WhiteLabelConfig
+}
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<UserPublic | null>(null);
     const [loading, setLoading] = useState(true);
+    const [setupDone, setSetupDone] = useState<boolean>(true);
+    const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>({
+        title: 'Cortex UI'
+    });
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchStatusAndUser = async () => {
             try {
+                const setupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/setup/status`);
+                const setupJson = await setupRes.json();
+
+                setSetupDone(setupJson.setupCompleted)
+
+                const whiteLabelRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/white-label`)
+                const whiteLabelJson = await whiteLabelRes.json()
+
+                setWhiteLabelConfig({
+                    logo: whiteLabelJson.logo !== null ? whiteLabelJson.logo : undefined,
+                    title: whiteLabelJson.title,
+                })
+
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/auth/me`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -36,19 +66,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 });
 
                 if (res.status === 200) {
-                    const json = await res.json()
-                    setUser(json.data)
+                    const json = await res.json();
+                    setUser(json.data);
                 } else {
-                    setUser(null)
+                    setUser(null);
                 }
             } catch {
-                setUser(null)
+                setUser(null);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
         };
-        fetchUser()
+
+        fetchStatusAndUser()
     }, []);
+
+    const refreshSetupDone = async () => {
+        try {
+            const setupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/setup/status`);
+            const setupJson = await setupRes.json();
+            setSetupDone(setupJson.setupCompleted)
+        } catch {
+            setUser(null);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const login = async (email: string, password: string) => {
         try {
@@ -97,7 +140,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         <AuthContext.Provider
             value={{
                 user,
+                whiteLabelConfig,
+                setupCompleted: setupDone,
                 isAuthenticated: !!user,
+                refreshSetupCompleted: refreshSetupDone,
                 loading,
                 login,
                 logout,

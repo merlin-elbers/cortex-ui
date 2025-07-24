@@ -2,8 +2,9 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, FileText, ExternalLink, Download } from 'lucide-react';
+import { CheckCircle, FileText, ExternalLink } from 'lucide-react';
 import {SetupData} from "@/type-definitions/SetupData";
+import Link from "next/link";
 
 interface LicenseStepProps {
     data: SetupData;
@@ -39,17 +40,27 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                             <span className="text-slate-900">
                                 Admin-Benutzer
                             </span>
-                            <span className={"text-indigo-500 font-semibold"}>
-                                {data.adminUser.firstName} {data.adminUser.lastName}
-                            </span>
+                            <div className={"font-semibold flex flex-col gap-1 text-right"}>
+                                <span className={"font-semibold"}>
+                                    {data.adminUser.firstName} {data.adminUser.lastName}
+                                </span>
+                                <span>
+                                    {data.adminUser.email}
+                                </span>
+                            </div>
                         </div>
                         <div className={"flex justify-between"}>
                             <span className={"text-slate-900"}>
                                 Datenbank
                             </span>
-                            <span className={"text-indigo-500 font-semibold"}>
-                                {data.database.dbName}
-                            </span>
+                            <div className={"font-semibold flex flex-col gap-1 text-right"}>
+                                <span>
+                                    {data.database.uri}
+                                </span>
+                                <span>
+                                    {data.database.dbName}
+                                </span>
+                            </div>
                         </div>
                         <div className={"flex justify-between"}>
                             <span className={"text-slate-900"}>
@@ -63,7 +74,7 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                             <span className={"text-slate-900"}>
                                 Name der App
                             </span>
-                            <span className={"text-indigo-500 font-semibold"}>
+                            <span className={"font-semibold"}>
                                 {data.branding.title}
                             </span>
                         </div>
@@ -71,8 +82,12 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                             <span className={"text-slate-900"}>
                                 E-Mail-Server
                             </span>
-                            <span className={"capitalize text-indigo-500 font-semibold"}>
+                            <span className={`${data.mailServer.type === 'smtp' ? 'uppercase' : 'capitalize'} font-semibold`}>
                                 {data.mailServer.type}
+                                {(data.mailServer.type === 'smtp' && data.mailServer.smtp?.tested) || (data.mailServer.type === 'microsoft365' && data.mailServer.microsoft365?.authenticated) ?
+                                    <span className={"text-lime-600 lowercase ml-1"}>konfiguriert</span> :
+                                    <span className={"text-red-500 lowercase ml-1"}>nicht konfiguriert</span>
+                                }
                             </span>
                         </div>
                         {data.analytics.matomoUrl && (
@@ -96,16 +111,34 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                         </h4>
                     </div>
 
-                    <div className={"bg-slate-100 rounded p-3 text-sm max-h-32 overflow-y-auto"}>
+                    <div className={"bg-slate-100 rounded p-3 text-sm max-h-48 overflow-y-auto"}>
                         <p className={"mb-2 font-semibold"}>
-                            CortexUI - MIT License
+                            CortexUI - Apache 2.0 License
                         </p>
                         <p className={"text-slate-900 leading-relaxed"}>
-                            Permission is hereby granted, free of charge, to any person obtaining a copy
-                            of this software and associated documentation files (the &#34;Software&#34;), to deal
-                            in the Software without restriction, including without limitation the rights
-                            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-                            copies of the Software...
+                            Apache License <br />
+                            Version 2.0, January 2004 <br />
+                            <Link href={"http://www.apache.org/licenses/"} target={"_blank"}>
+                                http://www.apache.org/licenses/
+                            </Link><br />
+                            <br />
+                            TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION<br />
+                            <br />
+                            Copyright 2025 elbers.dev<br />
+                            <br />
+                            Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+                            you may not use this file except in compliance with the License.
+                            You may obtain a copy of the License at<br />
+                            <br />
+                            <Link href={"http://www.apache.org/licenses/LICENSE-2.0"} target={"_blank"}>
+                                http://www.apache.org/licenses/LICENSE-2.0</Link>
+                            <br />
+                            <br />
+                            Unless required by applicable law or agreed to in writing, software
+                            distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+                            WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+                            See the License for the specific language governing permissions and
+                            limitations under the License.
                         </p>
                     </div>
 

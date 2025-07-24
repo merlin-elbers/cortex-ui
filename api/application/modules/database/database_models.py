@@ -4,6 +4,8 @@ from beanie import Document, Indexed
 from pydantic import Field
 from enum import Enum
 
+from application.modules.schemas.request_schemas import BrandingLogo
+
 
 class LoginStatus(Enum):
     success = True
@@ -89,3 +91,66 @@ class Microsoft365(Document):
 
     class Settings:
         name = "Microsoft365"
+
+
+class SMTPServer(Document):
+    uid: Indexed(str, unique=True)
+    host: str
+    port: int
+    username: str
+    password: str
+    senderName: str
+    senderEmail: str
+
+    class Settings:
+        name = "SMTPServer"
+
+    class Config:
+        json_schema_extra = {
+            "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
+            "host": "smtp.cortex.ui",
+            "port": 587,
+            "username": "<EMAIL>",
+            "password": "<PASSWORD>",
+            "senderName": "CortexUI",
+            "senderEmail": "noreply@cortex.ui",
+        }
+
+
+class MatomoConfig(Document):
+    uid: Indexed(str, unique=True)
+    matomoUrl: str
+    matomoSiteId: str | int
+    matomoApiKey: str
+
+    class Settings:
+        name = "MatomoConfig"
+
+    class Config:
+        json_schema_extra = {
+            "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
+            "matomoUrl": "analytics.cortex.ui",
+            "matomoSiteId": 1,
+            "matomoApiKey": "<API_KEY>",
+        }
+
+
+class WhiteLabelConfig(Document):
+    uid: Indexed(str, unique=True)
+    logo: BrandingLogo | None = None
+    title: str
+
+    class Settings:
+        name = "WhiteLabelConfig"
+
+    class Config:
+        json_schema_extra = {
+            "uid": "01981d65-0881-786d-8e00-b7b25f19c88f",
+            "logo": {
+                "contentType": "image/png",
+                "name": "CortexLogo.png",
+                "data": "<BASE_64_IMAGE_STRING>",
+                "lastModified": datetime.datetime.now()
+            },
+            "title": "CortexUI Dashboard",
+        }

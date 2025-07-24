@@ -1,11 +1,10 @@
 from passlib.context import CryptContext
 import datetime
-import os
-from dotenv import load_dotenv
 from jose import jwt, JWTError
 from starlette.requests import Request
-from application.modules.utils.database_models import User, UserRole, Logins, LoginStatus
+from application.modules.database.database_models import User, UserRole, Logins, LoginStatus
 from application.modules.schemas.response_schemas import GeneralException
+from application.modules.utils.settings import get_settings
 from application.routers.auth.dependencies import oauth2_scheme
 from fastapi import Depends, status
 from typing import Union, List
@@ -14,10 +13,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    load_dotenv()
+    settings = get_settings()
 
     try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user = await User.find_one(User.uid == payload.get('uid'))
         if not user or not user.isActive:
             raise GeneralException(
@@ -39,6 +38,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 def create_access_token(data: dict, expires_delta: Union[int, datetime.timedelta] = None) -> str:
+    settings = get_settings()
+
     to_encode = data.copy()
 
     if isinstance(expires_delta, int):
@@ -46,16 +47,18 @@ def create_access_token(data: dict, expires_delta: Union[int, datetime.timedelta
     elif isinstance(expires_delta, datetime.timedelta):
         expire = datetime.datetime.now() + expires_delta
     else:
-        expire = datetime.datetime.now() + datetime.timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")) or 60)
+        expire = datetime.datetime.now() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES or 60)
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM"))
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 
 def verify_token(token: str) -> Union[dict, None]:
+    settings = get_settings()
+
     try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except JWTError:
         return None
