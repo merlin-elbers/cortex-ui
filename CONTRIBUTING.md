@@ -56,6 +56,22 @@ python run.py
 Derzeit keine automatisierten Tests. Bitte Features testbar einreichen.  
 In Zukunft sollen Tests eingeführt werden (z. B. mit `pytest`, `playwright`, etc.).
 
+## ✅ Commit Konvention (empfohlen)
+
+Nutze Conventional Commits für bessere Lesbarkeit:
+
+
+| Prefix    | Zweck                         |
+|-----------|-------------------------------|
+| feature:  | Neues Feature                 |
+| bugfix:   | Bugfix                        |
+| chore:    | Build, CI, etc                |
+| docs:     | Dokumentation                 |
+| refactor: | Codeverbesserung ohne Bugfix  |
+| style:    | Formatierung, Semikolons, etc |
+
+Beispiel: feature: add setup wizard for Microsoft 365 auth
+
 ## 🧭 Beitragsschritte
 
 1. Forke das Repo
