@@ -32,7 +32,7 @@ const STEP_TITLES = [
 ];
 
 export default function SetupWizard() {
-    const { refreshSetupCompleted } = useAuth()
+    const { refreshSetupCompleted, refreshWhiteLabelConfig } = useAuth()
     const [currentStep, setCurrentStep] = useState(0)
     const [activateAnimation, setActivateAnimation] = useState(true)
     const [isSending, setIsSending] = useState(false)
@@ -148,6 +148,7 @@ export default function SetupWizard() {
                     categoryName: "success"
                 })
                 refreshSetupCompleted()
+                refreshWhiteLabelConfig()
                 setTimeout(() => {
                     redirect('/login')
                 }, 3000)
