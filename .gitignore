@@ -50,3 +50,8 @@ next-env.d.ts
 api/libs
 api/venv
 __pycache__/
+
+# api files
+
+api/logs/
+api/token/
