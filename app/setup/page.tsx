@@ -33,9 +33,11 @@ const STEP_TITLES = [
 
 export default function SetupWizard() {
     const { refreshSetupCompleted } = useAuth()
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep, setCurrentStep] = useState(0)
     const [activateAnimation, setActivateAnimation] = useState(true)
-    const [isSending, setIsSending] = useState(false);
+    const [isSending, setIsSending] = useState(false)
+    const [downloadConfig, setDownloadConfig] = useState<boolean>(false)
+    const [passwordOK, setPasswordOK] = useState<boolean>(false)
     const [setupData, setSetupData] = useState<SetupData>({
         adminUser: {
             firstName: '',
@@ -77,7 +79,7 @@ export default function SetupWizard() {
                 return true
             case 1:
                 return setupData.adminUser.firstName && setupData.adminUser.lastName &&
-                    setupData.adminUser.email && setupData.adminUser.password
+                    setupData.adminUser.email && setupData.adminUser.password && passwordOK
             case 2:
                 return setupData.database.uri && setupData.database.dbName && setupData.database.connectionTested
             case 4:
@@ -119,16 +121,17 @@ export default function SetupWizard() {
             generatedAt: new Date().toISOString(),
             version: '1.0.0'
         };
-
-        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'cortex-ui-config.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        if (downloadConfig) {
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'cortex-ui-config.json'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+        }
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/setup/complete`, {
                 method: 'POST',
@@ -174,7 +177,7 @@ export default function SetupWizard() {
             case 0:
                 return <FileUploadStep onNext={nextStep} onSkip={skipToLicense} updateData={setSetupData} />;
             case 1:
-                return <AdminUserStep {...stepProps} />;
+                return <AdminUserStep onPasswordChange={setPasswordOK} {...stepProps} />;
             case 2:
                 return <DatabaseStep {...stepProps} />;
             case 3:
@@ -186,7 +189,7 @@ export default function SetupWizard() {
             case 6:
                 return <AnalyticsStep {...stepProps} />;
             case 7:
-                return <LicenseStep {...stepProps} />;
+                return <LicenseStep onDownloadChange={setDownloadConfig} downloadChange={downloadConfig} {...stepProps} />;
             default:
                 return null;
         }

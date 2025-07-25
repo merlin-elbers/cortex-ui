@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, X, CheckCircle, AlertTriangle } from 'lucide-react';
+import {Upload, FileText, X, CheckCircle, AlertTriangle, Rocket} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Bus from "@/lib/bus";
 import {SetupDataZod} from "@/type-definitions/SetupDataZod";
@@ -108,12 +108,19 @@ export const FileUploadStep: React.FC<FileUploadStepProps> = ({ onNext, updateDa
     return (
         <div className={"space-y-8"}>
             <div className={"text-center space-y-4"}>
-                <h1 className={"text-3xl font-bold text-indigo-500"}>
+                <div className={"w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4"}>
+                    <Rocket className={"w-8 h-8 text-indigo-500"} />
+                </div>
+                <h1 className={"text-xl font-bold text-indigo-500"}>
                     Ersteinrichtung
                 </h1>
-                <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+                <p className="text-gray-500 max-w-2xl mx-auto text-sm leading-relaxed">
                     Laden Sie optional eine vorbereitete Setup-Konfigurationsdatei hoch (z. B. cortex-ui-config.json).
                     Wenn keine Datei hochgeladen wird, können Sie das Setup auch manuell durchlaufen.
+                </p>
+                <p className="text-red-600 max-w-2xl mx-auto text-xs leading-relaxed">
+                    <strong>Hinweis:</strong> Wenn Sie eine Konfigurationsdatei hochladen, werden <u>keine automatischen Tests</u> der Verbindungen durchgeführt.
+                    Bitte prüfen Sie daher sorgfältig, ob alle Angaben korrekt und erreichbar sind.
                 </p>
             </div>
 

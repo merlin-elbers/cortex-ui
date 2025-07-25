@@ -7,11 +7,13 @@ import {SetupData} from "@/type-definitions/SetupData";
 import Link from "next/link";
 
 interface LicenseStepProps {
+    downloadChange: boolean
+    onDownloadChange: (checked: boolean) => void;
     data: SetupData;
     updateData: (stepKey: keyof SetupData, data: object) => void;
 }
 
-export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) => {
+export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData, onDownloadChange, downloadChange }) => {
     const updateLicense = (field: string, value: boolean) => {
         updateData('license', { [field]: value });
     };
@@ -155,18 +157,22 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                     </Button>
                 </div>
 
-                <div className={"bg-blue-500/10 border border-blue-500/20 rounded-lg p-4"}>
-                    <h4 className={"font-medium text-blue-900 mb-2"}>
-                        Nach dem Setup
-                    </h4>
-                    <ul className={"text-sm text-blue-900 space-y-1"}>
-                        <li>
-                            • Starten Sie den API-Server neu
-                        </li>
-                        <li>
-                            • Loggen Sie sich mit Ihren Admin-Daten ein
-                        </li>
-                    </ul>
+                <div className={"flex items-start space-x-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-lg"}>
+                    <Checkbox
+                        id={"selfSignupEnabled"}
+                        checked={downloadChange}
+                        onCheckedChange={() => onDownloadChange(!downloadChange)}
+                        className={"mt-1"}
+                    />
+                    <div className={"space-y-2"}>
+                        <Label htmlFor={"selfSignupEnabled"} className={"font-semibold text-indigo-900"}>
+                            Konfigurationsdatei generieren
+                        </Label>
+                        <p className={"text-xs text-slate-900"}>
+                            Wenn aktiviert, wird eine Konfigurationsdatei aus Ihrem bestehenden Setup erstellt.
+                            Dieses können Sie nutzen, um eine zweite Instanz schnell und unkompliziert aufsetzen
+                        </p>
+                    </div>
                 </div>
 
                 <div className={"flex items-start space-x-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-lg"}>
@@ -196,7 +202,7 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData }) =>
                         </div>
                         <p className={"text-sm text-lime-900 mb-3"}>
                             Alle Einstellungen sind konfiguriert. Klicken Sie auf &#34;Setup abschließen&#34;
-                            um Ihre Konfigurationsdatei zu generieren.
+                            um Ihre Konfiguration an den Server zu übertragen.
                         </p>
                     </div>
                 )}

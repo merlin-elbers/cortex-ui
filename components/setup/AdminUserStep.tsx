@@ -1,19 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, Mail, Lock } from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import { SetupData } from '@/type-definitions/SetupData';
 
 interface AdminUserStepProps {
+    onPasswordChange: (isOk: boolean) => void;
     data: SetupData;
     updateData: (stepKey: keyof SetupData, data: object) => void;
 }
 
-export const AdminUserStep: React.FC<AdminUserStepProps> = ({ data, updateData }) => {
+export const AdminUserStep: React.FC<AdminUserStepProps> = ({ data, updateData, onPasswordChange }) => {
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState({
+        message: 'Mindestens 8 Zeichen, Groß- und Kleinbuchstaben sowie eine Zahl erforderlich.',
+        className: 'text-gray-500'
+    });
+
     const updateAdminUser = (field: string, value: string | boolean) => {
         updateData('adminUser', { [field]: value });
     };
+
+    useEffect(() => {
+        const password = data.adminUser.password;
+
+        if (password.length === 0) {
+            setPasswordError({
+                message: 'Mindestens 8 Zeichen, Groß- und Kleinbuchstaben sowie eine Zahl erforderlich.',
+                className: 'text-gray-500'
+            })
+            onPasswordChange(false)
+            return
+        }
+
+        const isValid =
+            password.length >= 8 &&
+            /[a-z]/.test(password) &&
+            /[A-Z]/.test(password) &&
+            /[0-9]/.test(password);
+
+        if (!isValid) {
+            setPasswordError({
+                message: 'Das Passwort muss mindestens 8 Zeichen lang sein und Groß-, Kleinbuchstaben sowie eine Zahl enthalten.',
+                className: 'text-red-600'
+            })
+            onPasswordChange(false)
+        } else if (password !== confirmPassword) {
+            setPasswordError({
+                message: 'Passwörter stimmen nicht überein.',
+                className: 'text-red-600'
+            })
+            onPasswordChange(false)
+        } else if (isValid && (password === confirmPassword)) {
+            setPasswordError({
+                message: 'Perfekt! Ihr Passwort erfüllt alle Sicherheitsanforderungen. 🔒',
+                className: 'text-lime-600'
+            })
+            onPasswordChange(true)
+        }
+
+    }, [data.adminUser.password, confirmPassword, onPasswordChange]);
 
     return (
         <div className={"space-y-6"}>
@@ -43,7 +90,7 @@ export const AdminUserStep: React.FC<AdminUserStepProps> = ({ data, updateData }
                 </div>
 
                 <div className={"space-y-2"}>
-                    <Label htmlFor="lastName">
+                    <Label htmlFor={"lastName"}>
                         Nachname <span className={"text-red-500"}>*</span>
                     </Label>
                     <Input
@@ -71,7 +118,6 @@ export const AdminUserStep: React.FC<AdminUserStepProps> = ({ data, updateData }
                     />
                 </div>
             </div>
-
             <div className={"space-y-2"}>
                 <Label htmlFor={"password"}>
                     Passwort <span className={"text-red-500"}>*</span>
@@ -81,14 +127,30 @@ export const AdminUserStep: React.FC<AdminUserStepProps> = ({ data, updateData }
                     <Input
                         id={"password"}
                         type={"password"}
-                        placeholder={"Sicheres Passwort eingeben"}
+                        placeholder={"Passwort eingeben"}
                         className={"pl-10"}
                         value={data.adminUser.password}
                         onChange={(e) => updateAdminUser('password', e.target.value)}
                     />
                 </div>
-                <p className={"text-xs text-gray-500"}>
-                    Mindestens 8 Zeichen, Groß- und Kleinbuchstaben, Zahlen empfohlen.
+            </div>
+            <div className={"space-y-2"}>
+                <Label htmlFor={"password"}>
+                    Passwort wiederholen <span className={"text-red-500"}>*</span>
+                </Label>
+                <div className={"relative"}>
+                    <Lock className={"absolute left-3 top-3 w-4 h-4 text-gray-500"} />
+                    <Input
+                        id={"confirmPassword"}
+                        type={"password"}
+                        placeholder={"Passwort bestätigen"}
+                        className={"pl-10 mt-2"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                </div>
+                <p className={`text-xs ${passwordError.className}`}>
+                    {passwordError.message}
                 </p>
             </div>
 
