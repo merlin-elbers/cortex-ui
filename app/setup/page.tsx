@@ -18,8 +18,10 @@ import CortexUI from "@/assets/CortexUI.png"
 import Bus from "@/lib/bus";
 import {useAuth} from "@/context/AuthContext";
 import {redirect} from "next/navigation";
+import {FileUploadStep} from "@/components/setup/FileUploadStep";
 
 const STEP_TITLES = [
+    'Konfigurationsdatei',
     'Admin-Benutzer erstellen',
     'Datenbankverbindung',
     'Self-Signup',
@@ -72,19 +74,21 @@ export default function SetupWizard() {
     const canProceed = () => {
         switch (currentStep) {
             case 0:
+                return true
+            case 1:
                 return setupData.adminUser.firstName && setupData.adminUser.lastName &&
                     setupData.adminUser.email && setupData.adminUser.password
-            case 1:
+            case 2:
                 return setupData.database.uri && setupData.database.dbName && setupData.database.connectionTested
-            case 3:
-                return setupData.branding.title
             case 4:
+                return setupData.branding.title
+            case 5:
                 return setupData.adminUser.emailVerification ?
                     ((setupData.mailServer.type === 'smtp' && setupData.mailServer.smtp?.tested) || (setupData.mailServer.type === 'microsoft365' && setupData.mailServer.microsoft365?.authenticated)) : true
-            case 5:
+            case 6:
                 const isMatomoConfigured = (!!setupData.analytics.matomoSiteId || !!setupData.analytics.matomoApiKey || !!setupData.analytics.matomoUrl)
                 return isMatomoConfigured ? setupData.analytics.connectionTested : true;
-            case 6:
+            case 7:
                 return setupData.license.accepted
             default:
                 return true;
@@ -101,7 +105,11 @@ export default function SetupWizard() {
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
         }
-    };
+    }
+
+    const skipToLicense = () => {
+        setCurrentStep(STEP_TITLES.length - 1)
+    }
 
     const transferConfig = async () => {
         if (isSending) return
@@ -154,7 +162,7 @@ export default function SetupWizard() {
         } finally {
             setIsSending(false);
         }
-    };
+    }
 
     const renderStep = () => {
         const stepProps = {
@@ -164,18 +172,20 @@ export default function SetupWizard() {
 
         switch (currentStep) {
             case 0:
-                return <AdminUserStep {...stepProps} />;
+                return <FileUploadStep onNext={nextStep} onSkip={skipToLicense} updateData={setSetupData} />;
             case 1:
-                return <DatabaseStep {...stepProps} />;
+                return <AdminUserStep {...stepProps} />;
             case 2:
-                return <SelfSignupStep {...stepProps} />;
+                return <DatabaseStep {...stepProps} />;
             case 3:
-                return <BrandingStep {...stepProps} />;
+                return <SelfSignupStep {...stepProps} />;
             case 4:
-                return <MailServerStep {...stepProps} />;
+                return <BrandingStep {...stepProps} />;
             case 5:
-                return <AnalyticsStep {...stepProps} />;
+                return <MailServerStep {...stepProps} />;
             case 6:
+                return <AnalyticsStep {...stepProps} />;
+            case 7:
                 return <LicenseStep {...stepProps} />;
             default:
                 return null;
@@ -236,29 +246,30 @@ export default function SetupWizard() {
                             Zurück
                         </span>
                     </Button>
-
-                    {currentStep === STEP_TITLES.length - 1 ? (
-                        <Button
-                            onClick={transferConfig}
-                            disabled={!canProceed() || isSending}
-                            className={"flex items-center gap-2"}
-                        >
+                    {currentStep > 0 && (
+                        currentStep === STEP_TITLES.length - 1 ? (
+                            <Button
+                                onClick={transferConfig}
+                                disabled={!canProceed() || isSending}
+                                className={"flex items-center gap-2"}
+                            >
                             <span>
                                 {isSending ? 'Übertrage Daten' : 'Setup abschließen'}
                             </span>
-                            <CircleCheck className={"w-4 h-4"} />
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={nextStep}
-                            disabled={!canProceed()}
-                            className={"flex items-center gap-2 ml-auto"}
-                        >
+                                <CircleCheck className={"w-4 h-4"} />
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={nextStep}
+                                disabled={!canProceed()}
+                                className={"flex items-center gap-2 ml-auto"}
+                            >
                             <span>
                                 Weiter
                             </span>
-                            <ChevronRight className={"w-4 h-4"} />
-                        </Button>
+                                <ChevronRight className={"w-4 h-4"} />
+                            </Button>
+                        )
                     )}
                 </div>
             </div>

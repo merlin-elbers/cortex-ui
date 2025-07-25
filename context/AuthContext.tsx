@@ -31,6 +31,7 @@ type AuthContextType = {
     logout: () => void;
     refreshSetupCompleted: () => void
     whiteLabelConfig: WhiteLabelConfig
+    refreshWhiteLabelConfig: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -80,6 +81,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         fetchStatusAndUser()
     }, []);
+
+    const refreshWhiteLabelConfig = async () => {
+        const whiteLabelRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/white-label`)
+        const whiteLabelJson = await whiteLabelRes.json()
+
+        setWhiteLabelConfig({
+            logo: whiteLabelJson.logo !== null ? whiteLabelJson.logo : undefined,
+            title: whiteLabelJson.title,
+        })
+    }
 
     const refreshSetupDone = async () => {
         try {
@@ -141,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             value={{
                 user,
                 whiteLabelConfig,
+                refreshWhiteLabelConfig,
                 setupCompleted: setupDone,
                 isAuthenticated: !!user,
                 refreshSetupCompleted: refreshSetupDone,

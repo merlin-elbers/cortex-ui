@@ -19,7 +19,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     
     const { isOnline, errorMessage, lastChecked } = usePing();
-    const { isAuthenticated, loading, login, setupCompleted, whiteLabelConfig } = useAuth()
+    const { isAuthenticated, loading, login, setupCompleted, whiteLabelConfig, refreshWhiteLabelConfig } = useAuth()
 
     useEffect(() => {
         if (isOnline === false && lastChecked < new Date()) {
@@ -29,7 +29,7 @@ const Login = () => {
                 categoryName: "warning"
             });
         }
-    }, [errorMessage, isOnline, lastChecked]);
+    }, [errorMessage, isOnline, lastChecked, refreshWhiteLabelConfig]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -57,6 +57,8 @@ const Login = () => {
     if (!setupCompleted) {
         redirect("/setup");
     }
+
+    refreshWhiteLabelConfig()
 
     return !isAuthenticated ? (
         <div
