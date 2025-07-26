@@ -1,5 +1,5 @@
 import datetime
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from pydantic import BaseModel
 
 
@@ -74,3 +74,50 @@ class UpdateUser(BaseModel):
             "role": "admin",
             "isActive": True,
         }
+
+
+class MatomoSummary(BaseModel):
+    visitsLastWeek: int
+    visitsPreviousWeek: int
+    visitsDifference: float
+    bounceCountLastWeek: int
+    bounceCountPreviousWeek: int
+    bounceCountDifference: float
+    averageTimeLastWeek: int
+    averageTimePreviousWeek: int
+    averageTimeDifference: float
+    actionsLastWeek: int
+    actionsPreviousWeek: int
+    actionsDifference: float
+
+
+class MatomoTopPage(BaseModel):
+    url: str
+    visitsLastWeek: int
+    averageTimeLastWeek: int
+    bounceRateLastWeek: float
+    exitRateLastWeek: float
+    averageLoadTimeLastWeek: float
+
+
+class MatomoTopReferrer(BaseModel):
+    label: str
+    visitsLastWeek: int
+    actionsLastWeek: int
+    averageSessionLengthLastWeek: int
+    bounceRateLastWeek: float
+
+
+class MatomoTopCountry(BaseModel):
+    country: str
+    visitsLastWeek: int
+    actionsLastWeek: int
+    averageSessionLengthLastWeek: int
+    bounceRateLastWeek: float
+
+
+class MatomoAnalytics(BaseModel):
+    summary: MatomoSummary
+    topCountries: List[MatomoTopCountry]
+    topReferrers: List[MatomoTopReferrer]
+    topPages: List[MatomoTopPage]

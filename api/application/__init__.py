@@ -58,9 +58,9 @@ class Application:
     @staticmethod
     def _build_middleware(trusted_domains: list[str]) -> list[Middleware]:
         return [
-            Middleware(SetupGuardMiddleware), # type: ignore[arg-type]
+            Middleware(SetupGuardMiddleware),  # type: ignore[arg-type]
             Middleware(
-                CORSMiddleware, # type: ignore[arg-type]
+                CORSMiddleware,  # type: ignore[arg-type]
                 allow_origins=trusted_domains,
                 allow_credentials=True,
                 allow_methods=["*"],
@@ -73,18 +73,18 @@ class Application:
         return self.__app
 
     def __init_routes(self):
-        from application.routers import auth, users, system, setup
+        from application.routers import auth, users, system, setup, analytics
 
         routers = [
             (auth.router, "/auth"),
             (users.router, ""),
             (system.router, "/system"),
             (setup.router, "/setup"),
+            (analytics.router, "/analytics"),
         ]
 
         for router, prefix in routers:
             self.__app.include_router(router, prefix=f"{self.__api_prefix or ''}{prefix}")
-
 
     def __init_handlers(self):
         from application.modules.schemas.response_schemas import GeneralException
