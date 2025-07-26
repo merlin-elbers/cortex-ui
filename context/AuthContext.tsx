@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import Bus from "@/lib/bus";
 
 export type UserPublic = {
     uid: string;
@@ -86,7 +87,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 body: urlencoded,
             });
 
-            if (res.status !== 200) return false;
+            if (res.status !== 200) {
+                Bus.emit('notification', {
+                    title: "Fehler beim Login",
+                    message: "Bitte prüfen Sie die ihre E-Mail und ihr Passwort.",
+                    categoryName: "warning"
+                })
+                return false;
+            }
 
             const json = await res.json();
             localStorage.setItem('access_token', json.data.accessToken);
