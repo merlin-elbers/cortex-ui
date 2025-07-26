@@ -69,7 +69,7 @@ class ValidationError(BaseModel):
     status: Annotated[str, Path(
         title='Statuscode',
         description='Ein Systeminterner Statuscode')
-    ] = "INTERNAL_ERROR"
+    ] = "VALIDATION_ERROR"
     message: list[ValidationErrorDescription] = []
 
 
@@ -128,5 +128,13 @@ class SetupResponse(BaseResponse):
 class WhiteLabelResponse(BaseResponse):
     logo: BrandingLogo
     title: str
+
+
+class StatusResponse(BaseResponse):
+    databaseOnline: bool
+    selfSignupEnabled: bool
+    smtpServerConfigured: bool
+    m365Configured: bool
+    matomoConfigured: bool
 
 # endregion
