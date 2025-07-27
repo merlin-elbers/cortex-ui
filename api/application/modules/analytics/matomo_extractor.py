@@ -1,6 +1,8 @@
 from typing import List, Dict, Tuple
 from datetime import date, timedelta
-from application.modules.schemas.schemas import MatomoTopPage, MatomoTopReferrer, MatomoTopCountry
+
+from application.modules.analytics.matomo_client import MatomoAPIClient
+from application.modules.schemas.schemas import MatomoTopPage, MatomoTopReferrer, MatomoTopCountry, MatomoSummaryItem
 
 
 def parse_bounce_rate(bounce_count: int, page_visits: int) -> float:
@@ -13,6 +15,49 @@ def calculate_difference(last_week_data: int, previous_week_data: int) -> float:
         ((difference / previous_week_data * 100) if previous_week_data != 0 else 0),
         2
     )
+
+
+def extract_summary(matomo_client: MatomoAPIClient) -> List[MatomoSummaryItem]:
+    current_range, previous_range = get_two_week_windows()
+
+    last_week = matomo_client.get_summary(period="range", date=current_range)
+    previous_week = matomo_client.get_summary(period="range", date=previous_range)
+
+    return [
+        MatomoSummaryItem(
+            label="Aufrufe",
+            icon=None,
+            number=last_week.get('nb_visits'),
+            trend="UP" if calculate_difference(last_week.get('nb_visits'),
+                                               previous_week.get('nb_visits')) > 0 else "DOWN",
+            trendLabel=f"{calculate_difference(last_week.get('nb_visits'), previous_week.get('nb_visits'))}%"
+        ),
+        MatomoSummaryItem(
+            label="Bounce Rate",
+            icon=None,
+            number=last_week.get('bounce_count'),
+            trend="UP" if calculate_difference(last_week.get('bounce_count'),
+                                               previous_week.get('bounce_count')) else "DOWN",
+            trendLabel=f"{calculate_difference(last_week.get('bounce_count'), previous_week.get('bounce_count'))}%"
+        ),
+        MatomoSummaryItem(
+            label="Interaktionen",
+            icon=None,
+            number=last_week.get('nb_actions'),
+            trend="UP" if calculate_difference(last_week.get('nb_actions'),
+                                               previous_week.get('nb_actions')) > 0 else "DOWN",
+            trendLabel=f"{calculate_difference(last_week.get('nb_actions'), previous_week.get('nb_actions'))}%"
+        ),
+        MatomoSummaryItem(
+            label="Ø Zeit auf Seite",
+            icon=None,
+            number=last_week.get('avg_time_on_site'),
+            trend="UP" if calculate_difference(last_week.get('avg_time_on_site'),
+                                               previous_week.get('avg_time_on_site')) > 0 else "DOWN",
+            trendLabel=f"{calculate_difference(last_week.get('avg_time_on_site'), 
+                                               previous_week.get('avg_time_on_site'))}%"
+        ),
+    ]
 
 
 def get_two_week_windows(today: date = date.today()) -> Tuple[str, str]:

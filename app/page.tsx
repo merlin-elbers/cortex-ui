@@ -1,57 +1,68 @@
 'use client'
 
-import {BarChart3, FileText, Users, TrendingUp, Clock, Eye, TrendingDown} from 'lucide-react';
+import {
+    TrendingUp,
+    Clock,
+    Eye,
+    TrendingDown,
+    CornerUpLeft,
+    Activity,
+    BarChart2, MousePointerClick, Search, Globe, Share2
+} from 'lucide-react';
 import {useAuth} from "@/context/AuthContext";
 import {redirect} from "next/navigation";
+import React, {useEffect, useState} from "react";
+import {MatomoAnalytics} from "@/type-definitions/Matomo";
+import Loader from "@/components/Loader";
 
 const AdminDashboard = () => {
-    const { user, isAuthenticated } = useAuth()
+    const { user, isAuthenticated, serverStatus } = useAuth()
+    const [loading, setLoading] = useState<boolean>(true)
+    const [analytics, setAnalytics] = useState<MatomoAnalytics | null>(null)
 
-    const stats = [
-        {
-            label: "Gesamt Aufrufe",
-            icon: <div className={"bg-blue-500/40 p-3 rounded-lg"}><Eye className={"h-6 w-6 text-blue-600"} /></div>,
-            number: 5692,
-            trend: 'UP',
-            trendLabel: '9%',
-        },
-        {
-            label: "Blog Posts",
-            icon: <div className={"bg-red-500/40 p-3 rounded-lg"}><FileText className={"h-6 w-6 text-red-600"} /></div>,
-            number: 23,
-            trend: 'DOWN',
-            trendLabel: '27%',
-        },
-        {
-            label: "Registrierte Nutzer",
-            icon: <div className={"bg-green-500/40 p-3 rounded-lg"}><Users className={"h-6 w-6 text-green-600"} /></div>,
-            number: 5,
-            trend: 'DOWN',
-            trendLabel: '50%',
-        },
-        {
-            label: "Conversion Rate",
-            icon: <div className={"bg-purple-500/40 p-3 rounded-lg"}><BarChart3 className={"h-6 w-6 text-purple-600"} /></div>,
-            number: "3.2%",
-            trend: 'UP',
-            trendLabel: '0.8%',
-        },
-    ]
+    useEffect(() => {
+        setLoading(true)
+        if (serverStatus.matomoConfigured) {
+            fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/analytics/matomo`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                }
+            })
+                .then(res => res.json())
+                .then(json => {
+                    if (json.isOk) {
+                        for (const entry of json.data.summary) {
+                            if (entry.label.toLowerCase().includes('aufrufe')) entry.icon = <div className={"bg-blue-500/40 p-3 rounded-lg"}><Eye className={"h-6 w-6 text-blue-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('bounce')) entry.icon = <div className={"bg-red-500/40 p-3 rounded-lg"}><CornerUpLeft className={"h-6 w-6 text-red-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('aktionen')) entry.icon = <div className={"bg-green-500/40 p-3 rounded-lg"}><Activity className={"h-6 w-6 text-green-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('zeit')) entry.icon = <div className={"bg-purple-500/40 p-3 rounded-lg"}><Clock className={"h-6 w-6 text-purple-600"} /></div>
+                            else entry.icon = <div className={"bg-indigo-500/40 p-3 rounded-lg"}><BarChart2 className={"h-6 w-6 text-indigo-600"} /></div>
+                        }
+                        for (const entry of json.data.topReferrers) {
+                            if (entry.label.toLowerCase().includes('direct')) entry.icon = <div className={"bg-blue-500/40 p-2 rounded-lg"}><MousePointerClick className={"h-5 w-5 text-blue-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('search')) entry.icon = <div className={"bg-red-500/40 p-2 rounded-lg"}><Search className={"h-5 w-5 text-red-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('websites')) entry.icon = <div className={"bg-green-500/40 p-2 rounded-lg"}><Globe className={"h-5 w-5 text-green-600"} /></div>
+                            else if (entry.label.toLowerCase().includes('social')) entry.icon = <div className={"bg-purple-500/40 p-2 rounded-lg"}><Share2 className={"h-5 w-5 text-purple-600"} /></div>
+                            else entry.icon = <div className={"bg-indigo-500/40 p-2 rounded-lg"}><BarChart2 className={"h-5 w-5 text-indigo-600"} /></div>
+                        }
+                        setAnalytics({...json.data})
+                    }
+                })
+                .then(() => setLoading(false))
+        }
+    }, [serverStatus]);
 
-    const recentActivity = [
-        { id: 1, type: 'blog', title: 'Neuer Blog Post veröffentlicht', time: '2 Stunden', author: 'Admin' },
-        { id: 2, type: 'visit', title: '50 neue Website Besucher', time: '4 Stunden', author: 'System' },
-        { id: 3, type: 'magazin', title: 'HaitCore Artikel aktualisiert', time: '1 Tag', author: 'Editor' },
-        { id: 4, type: 'service', title: 'Neue Leistung hinzugefügt', time: '2 Tage', author: 'Admin' },
-    ];
+    function formatTime(seconds: number) {
+        if (seconds >= 60) {
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            return `${min}m ${sec}s`;
+        }
+        return `${seconds}s`;
+    }
 
-    const topPages = [
-        { path: '/', visits: 3421, title: 'Startseite' },
-        { path: '/blog-post', visits: 1876, title: 'Blog' },
-        { path: '/magazin', visits: 1654, title: 'HaitCore Magazin' },
-        { path: '/leistungen', visits: 1234, title: 'Leistungen' },
-        { path: '/kontakt', visits: 987, title: 'Kontakt' },
-    ];
+    if (loading) return <Loader />
 
     return isAuthenticated ? (
         <div className={"p-6 space-y-6"}>
@@ -68,8 +79,8 @@ const AdminDashboard = () => {
             </div>
 
             <div className={"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"}>
-                {stats.map((stat, index) => (
-                    <div key={`stat-${index}`} className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
+                {analytics && analytics.summary.map((stat, index) => (
+                    <div key={`stat-${index}`} className={`${stat.trend === 'UP' ? 'bg-slate-50' : 'bg-slate-100'} border border-slate-200 rounded-lg p-6`}>
                         <div className={"flex items-center justify-between"}>
                             <div>
                                 <p className={"text-slate-900 text-sm"}>
@@ -92,7 +103,7 @@ const AdminDashboard = () => {
                                 {stat.trendLabel}
                             </span>
                             <span className={"text-gray-500 ml-1"}>
-                                ggü. letzten Monat
+                                gegenüber der Vorwoche
                             </span>
                         </div>
                     </div>
@@ -102,20 +113,28 @@ const AdminDashboard = () => {
             <div className={"grid grid-cols-1 lg:grid-cols-2 gap-6"}>
                 <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
                     <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
-                        Letzte Aktivitäten
+                        Trafficquellen
                     </h2>
-                    <div className={"space-y-4"}>
-                        {recentActivity.map((activity) => (
-                            <div key={activity.id} className={"flex items-center gap-4 p-3 bg-slate-200 rounded-lg"}>
-                                <div className={"bg-indigo-500/40 p-2 rounded-lg"}>
-                                    <Clock className={"h-4 w-4 text-indigo-600"} />
+                    <div className={"space-y-3"}>
+                        {analytics && analytics.topReferrers.map((referrer) => (
+                            <div key={referrer.label} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
+                                <div className={"flex items-center gap-3"}>
+                                    {referrer.icon}
+                                    <div>
+                                        <p className={"text-slate-900 text-sm font-semibold capitalize"}>
+                                            {referrer.label}
+                                        </p>
+                                        <p className={"text-gray-500 text-xs"}>
+                                            Ø Aufenthaltsdauer {formatTime(referrer.averageSessionLengthLastWeek)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className={"flex-1"}>
-                                    <p className={"text-slate-900 text-sm font-medium"}>
-                                        {activity.title}
+                                <div className={"text-right"}>
+                                    <p className={"text-slate-900 text-sm font-bold"}>
+                                        {referrer.visitsLastWeek}
                                     </p>
                                     <p className={"text-gray-500 text-xs"}>
-                                        von {activity.author} • vor {activity.time}
+                                        Aufrufe
                                     </p>
                                 </div>
                             </div>
@@ -128,24 +147,24 @@ const AdminDashboard = () => {
                         Meistbesuchte Seiten
                     </h2>
                     <div className={"space-y-3"}>
-                        {topPages.map((page, index) => (
-                            <div key={page.path} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
+                        {analytics && analytics.topPages.map((page, index) => (
+                            <div key={page.url} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
                                 <div className={"flex items-center gap-3"}>
-                                    <span className={"text-indigo-500 font-bold text-sm"}>
+                                    <span className={"text-indigo-500 font-bold text-base"}>
                                         #{index + 1}
                                     </span>
                                     <div>
-                                        <p className={"text-slate-900 text-sm font-medium"}>
-                                            {page.title}
+                                        <p className={"text-slate-900 text-sm font-semibold capitalize"}>
+                                            {page.url.replace('/', '').replaceAll('-', ' ')} <span className={"font-medium text-gray-500 lowercase"}>({page.url})</span>
                                         </p>
                                         <p className={"text-gray-500 text-xs"}>
-                                            {page.path}
+                                            Ø Ladezeit {formatTime(page.averageLoadTimeLastWeek)}
                                         </p>
                                     </div>
                                 </div>
                                 <div className={"text-right"}>
                                     <p className={"text-slate-900 text-sm font-bold"}>
-                                        {page.visits.toLocaleString()}
+                                        {page.visitsLastWeek}
                                     </p>
                                     <p className={"text-gray-500 text-xs"}>
                                         Aufrufe

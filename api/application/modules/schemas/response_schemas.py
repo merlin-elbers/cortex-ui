@@ -3,7 +3,7 @@ from fastapi import Path
 from pydantic import BaseModel
 
 from application.modules.schemas.request_schemas import BrandingLogo
-from application.modules.schemas.schemas import GetUser, MatomoAnalytics
+from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema
 
 
 # region Response Schemas
@@ -131,11 +131,7 @@ class WhiteLabelResponse(BaseResponse):
 
 
 class StatusResponse(BaseResponse):
-    databaseOnline: bool
-    selfSignupEnabled: bool
-    smtpServerConfigured: bool
-    m365Configured: bool
-    matomoConfigured: bool
+    data: ServerStatusSchema
 
 
 class MatomoAnalyticsResponse(BaseResponse):

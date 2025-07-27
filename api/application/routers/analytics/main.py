@@ -1,17 +1,17 @@
 from fastapi import APIRouter, Depends
 from application.modules.analytics.matomo_client import MatomoAPIClient
-from application.modules.analytics.matomo_extractor import calculate_difference, get_two_week_windows, \
-    extract_top_pages, extract_top_referrers, extract_top_countries
+from application.modules.analytics.matomo_extractor import (extract_top_pages, extract_top_referrers,
+                                                            extract_top_countries, extract_summary)
 from application.modules.database.database_models import MatomoConfig
-from application.modules.schemas.response_schemas import ValidationError, GeneralExceptionSchema, \
-    GeneralException, MatomoAnalyticsResponse
-from application.modules.schemas.schemas import MatomoAnalytics, MatomoSummary
+from application.modules.schemas.response_schemas import (ValidationError, GeneralExceptionSchema,
+                                                          GeneralException, MatomoAnalyticsResponse)
+from application.modules.schemas.schemas import MatomoAnalytics
 from application.routers.auth.utils import get_current_user
 
 router = APIRouter()
 
 
-@router.get("/analytics/matomo",
+@router.get("/matomo",
             status_code=200,
             tags=["📊 Analytics"],
             name="Erhalte Matomo Analytics Daten",
@@ -49,7 +49,9 @@ router = APIRouter()
                     'model': GeneralExceptionSchema
                 }
             })
-async def get_matomo_analytics():
+async def get_matomo_analytics(
+        _user=Depends(get_current_user)
+):
     matomo_data = await MatomoConfig.find_one()
     if not matomo_data:
         raise GeneralException(
@@ -63,38 +65,13 @@ async def get_matomo_analytics():
         site_id=matomo_data.matomoSiteId,
         encrypted_token=matomo_data.matomoApiKey
     )
-    current_range, previous_range = get_two_week_windows()
-
-    last_week = matomo_client.get_summary(period="range", date=current_range)
-    previous_week = matomo_client.get_summary(period="range", date=previous_range)
 
     return MatomoAnalyticsResponse(
         isOk=True,
         status="OK",
-        message="Daten von Matomo erfolgreich evaluiert",
+        message="Daten von Matomo erfolgreich analysiert",
         data=MatomoAnalytics(
-            summary=MatomoSummary(
-                visitsLastWeek=last_week.get('nb_visits'),
-                visitsPreviousWeek=previous_week.get('nb_visits'),
-                visitsDifference=calculate_difference(
-                    last_week.get('nb_visits'), previous_week.get('nb_visits')
-                ),
-                bounceCountLastWeek=last_week.get('bounce_count'),
-                bounceCountPreviousWeek=previous_week.get('bounce_count'),
-                bounceCountDifference=calculate_difference(
-                    last_week.get('bounce_count'), previous_week.get('bounce_count')
-                ),
-                averageTimeLastWeek=last_week.get('avg_time_on_site'),
-                averageTimePreviousWeek=previous_week.get('avg_time_on_site'),
-                averageTimeDifference=calculate_difference(
-                    last_week.get('avg_time_on_site'), previous_week.get('avg_time_on_site')
-                ),
-                actionsLastWeek=last_week.get('nb_actions'),
-                actionsPreviousWeek=previous_week.get('nb_actions'),
-                actionsDifference=calculate_difference(
-                    last_week.get('nb_actions'), previous_week.get('nb_actions')
-                )
-            ),
+            summary=extract_summary(matomo_client),
             topCountries=extract_top_countries(matomo_client.get_countries(period="week", date="last1")),
             topReferrers=extract_top_referrers(matomo_client.get_top_referrers(period="week", date="last1")),
             topPages=extract_top_pages(matomo_client.get_top_pages(period="week", date="last1"))

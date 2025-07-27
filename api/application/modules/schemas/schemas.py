@@ -76,19 +76,12 @@ class UpdateUser(BaseModel):
         }
 
 
-class MatomoSummary(BaseModel):
-    visitsLastWeek: int
-    visitsPreviousWeek: int
-    visitsDifference: float
-    bounceCountLastWeek: int
-    bounceCountPreviousWeek: int
-    bounceCountDifference: float
-    averageTimeLastWeek: int
-    averageTimePreviousWeek: int
-    averageTimeDifference: float
-    actionsLastWeek: int
-    actionsPreviousWeek: int
-    actionsDifference: float
+class MatomoSummaryItem(BaseModel):
+    label: str
+    icon: str | None = None
+    number: int | float
+    trend: str
+    trendLabel: str = "%"
 
 
 class MatomoTopPage(BaseModel):
@@ -117,7 +110,15 @@ class MatomoTopCountry(BaseModel):
 
 
 class MatomoAnalytics(BaseModel):
-    summary: MatomoSummary
+    summary: List[MatomoSummaryItem]
     topCountries: List[MatomoTopCountry]
     topReferrers: List[MatomoTopReferrer]
     topPages: List[MatomoTopPage]
+
+
+class ServerStatusSchema(BaseModel):
+    databaseOnline: bool
+    selfSignupEnabled: bool
+    smtpServerConfigured: bool
+    m365Configured: bool
+    matomoConfigured: bool
