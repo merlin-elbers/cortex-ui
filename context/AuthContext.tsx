@@ -25,6 +25,14 @@ interface WhiteLabelConfig {
     title: string;
 }
 
+interface ServerStatus {
+    databaseOnline: boolean;
+    selfSignupEnabled: boolean;
+    smtpServerConfigured: boolean;
+    m365Configured: boolean;
+    matomoConfigured: boolean;
+}
+
 type AuthContextType = {
     user: UserPublic | null;
     isAuthenticated: boolean;
@@ -34,7 +42,9 @@ type AuthContextType = {
     logout: () => void;
     refreshSetupCompleted: () => void;
     whiteLabelConfig: WhiteLabelConfig;
+    serverStatus: ServerStatus;
     refreshWhiteLabelConfig: () => void;
+    refreshSystemStatus: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -46,6 +56,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>({
         title: 'Cortex UI',
     });
+    const [serverStatus, setServerStatus] = useState<ServerStatus>({
+        databaseOnline: false,
+        selfSignupEnabled: false,
+        smtpServerConfigured: false,
+        m365Configured: false,
+        matomoConfigured: false,
+    })
 
     const refreshWhiteLabelConfig = async () => {
         try {
@@ -57,7 +74,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 title: json.title ?? 'Cortex UI',
             });
         } catch (err) {
-            console.error('WhiteLabel fetch failed:', err);
+            Bus.emit('notification', {
+                title: 'Fehler beim Abruf',
+                message: `WhiteLabel Daten konnten nicht vom Server abgerufen werden. ${err}`,
+                category: 'error'
+            })
+        }
+    };
+
+    const refreshSystemStatus = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/status`);
+            const json = await res.json();
+
+            if (json.isOk) setServerStatus(json.data)
+        } catch (err) {
+            Bus.emit('notification', {
+                title: 'Fehler beim Abruf',
+                message: `Serverstatus konnte nicht vom Server abgerufen werden. ${err}`,
+                category: 'error'
+            })
         }
     };
 
@@ -133,6 +169,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setSetupDone(setupJson.setupCompleted);
 
                 await refreshWhiteLabelConfig();
+                await refreshSystemStatus();
 
                 const token = localStorage.getItem('access_token');
                 if (!token) return;
@@ -171,6 +208,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 refreshSetupCompleted: refreshSetupDone,
                 whiteLabelConfig,
                 refreshWhiteLabelConfig,
+                serverStatus,
+                refreshSystemStatus,
             }}
         >
             {children}

@@ -13,6 +13,7 @@ from application.modules.schemas.response_schemas import ValidationError, Genera
     BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse, WhiteLabelResponse, StatusResponse
 from application.modules.database.database_models import UserRole, WhiteLabelConfig, SMTPServer, Microsoft365, \
     MatomoConfig
+from application.modules.schemas.schemas import ServerStatusSchema
 from application.modules.utils.settings import get_settings
 from application.routers.auth.utils import require_role
 
@@ -458,9 +459,11 @@ async def get_status():
         isOk=True,
         status="OK",
         message=f"Status überprüft",
-        databaseOnline=database_online,
-        selfSignupEnabled=settings.SELF_SIGNUP,
-        smtpServerConfigured=True if await SMTPServer.find_one() else False,
-        m365Configured=True if await Microsoft365.find_one() else False,
-        matomoConfigured=True if await MatomoConfig.find_one() else False,
+        data=ServerStatusSchema(
+            databaseOnline=database_online,
+            selfSignupEnabled=settings.SELF_SIGNUP,
+            smtpServerConfigured=True if await SMTPServer.find_one() else False,
+            m365Configured=True if await Microsoft365.find_one() else False,
+            matomoConfigured=True if await MatomoConfig.find_one() else False,
+        )
     )
