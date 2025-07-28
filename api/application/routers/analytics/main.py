@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends
 from application.modules.analytics.matomo_client import MatomoAPIClient
 from application.modules.analytics.matomo_extractor import (extract_top_pages, extract_top_referrers,
                                                             extract_top_countries, extract_summary)
+from application.modules.auth.dependencies import get_current_user
 from application.modules.database.database_models import MatomoConfig
 from application.modules.schemas.response_schemas import (ValidationError, GeneralExceptionSchema,
                                                           GeneralException, MatomoAnalyticsResponse)
 from application.modules.schemas.schemas import MatomoAnalytics
-from application.routers.auth.utils import get_current_user
 
 router = APIRouter()
 

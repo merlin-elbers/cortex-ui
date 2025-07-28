@@ -3,11 +3,13 @@ from fastapi import APIRouter, Depends, Path
 from starlette import status
 from starlette.responses import Response
 from uuid6 import uuid7
+
+from application.modules.auth.dependencies import require_role
+from application.modules.auth.security import hash_password
 from application.modules.database.database_models import User, UserRole, Logins
 from application.modules.schemas.response_schemas import ValidationError, UsersResponse, BaseResponse, GeneralException, \
     GeneralExceptionSchema
 from application.modules.schemas.schemas import UpdateUser, GetUser, CreateUserAdmin
-from application.routers.auth.utils import require_role, hash_password
 
 router = APIRouter()
 
@@ -216,7 +218,7 @@ async def update_user(
     if data.password:
         user.password = hash_password(data.password)
 
-    await user.save()
+    await user.create()
 
     return BaseResponse(
         isOk=True,
@@ -275,7 +277,7 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND
         )
 
-    await user.delete()
+    await user.delete_all()
 
     return Response(
         status_code=status.HTTP_204_NO_CONTENT

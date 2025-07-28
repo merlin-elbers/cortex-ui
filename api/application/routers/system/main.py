@@ -8,6 +8,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from time import perf_counter
 import os
 from starlette.responses import FileResponse
+
+from application.modules.auth.dependencies import require_role
 from application.modules.schemas.request_schemas import M365TokenRequest
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
     BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse, WhiteLabelResponse, StatusResponse
@@ -15,7 +17,6 @@ from application.modules.database.database_models import UserRole, WhiteLabelCon
     MatomoConfig
 from application.modules.schemas.schemas import ServerStatusSchema
 from application.modules.utils.settings import get_settings
-from application.routers.auth.utils import require_role
 
 router = APIRouter()
 
