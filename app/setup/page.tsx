@@ -32,7 +32,7 @@ const STEP_TITLES = [
 ];
 
 export default function SetupWizard() {
-    const { refreshSetupCompleted, refreshWhiteLabelConfig, refreshSystemStatus } = useAuth()
+    const { refreshSetupCompleted, refreshWhiteLabelConfig, refreshSystemStatus, setupCompleted } = useAuth()
     const [currentStep, setCurrentStep] = useState(0)
     const [activateAnimation, setActivateAnimation] = useState(true)
     const [isSending, setIsSending] = useState(false)
@@ -208,6 +208,8 @@ export default function SetupWizard() {
     }, [currentStep]);
 
     const progressPercentage = ((currentStep + 1) / STEP_TITLES.length) * 100;
+
+    if (setupCompleted) return redirect('/login')
 
     return (
         <div className={"min-h-screen p-4"}>
