@@ -50,8 +50,6 @@ const AdminSidebar = () => {
     };
     if (loading) return <Loader />
 
-    console.log(whiteLabelConfig)
-
     return isAuthenticated && (
         <div className={"w-64 bg-slate-50 border-r border-slate-200 flex flex-col h-screen sticky top-0 left-0"}>
             <div className={"p-6 border-b border-slate-200"}>
