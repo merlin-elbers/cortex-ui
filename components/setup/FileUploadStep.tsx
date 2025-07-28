@@ -2,7 +2,7 @@ import React, {FC, useState} from 'react';
 import { Button } from '@/components/ui/button';
 import {FileText, Rocket} from 'lucide-react';
 import {SetupData} from "@/types/SetupData";
-import FileUpload from "@/lib/file-upload";
+import FileUpload from "@/components/FileUpload";
 
 interface FileUploadStepProps {
     onNext: () => void;

@@ -4,7 +4,7 @@ import {Palette, AlertCircle, Images} from 'lucide-react';
 import {SetupData} from "@/types/SetupData";
 import {Textarea} from "@/components/ui/textarea";
 import {Checkbox} from "@/components/ui/checkbox";
-import FileUpload from "@/lib/file-upload";
+import FileUpload from "@/components/FileUpload";
 import React, {FC} from "react";
 
 interface BrandingStepProps {
