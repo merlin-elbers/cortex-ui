@@ -168,8 +168,12 @@ async def complete_setup(data: SetupData):
         if data.analytics.connectionTested:
             await MatomoConfig.find_all().delete()
 
+            encrypted_password = encrypt_password(data.analytics.matomoApiKey)
+            del data.analytics.matomoApiKey
+
             new_configuration = MatomoConfig(
                 uid=str(uuid6.uuid7()),
+                matomoApiKey=encrypted_password,
                 **data.analytics.__dict__
             )
 
