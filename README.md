@@ -42,7 +42,7 @@ Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Conten
 
 ```bash
 git clone https://github.com/merlin-elbers/cortex-ui.git
-cd cortex-ui
+cd cortex-ui-master
 ```
 
 ### 2. Frontend vorbereiten
@@ -57,7 +57,6 @@ npm install
 ```bash
 cd api
 pip install -r requirements.txt
-uvicorn application:Application.app --host 127.0.0.1 --port 8000 # oder python run.py
 ```
 
 ### 4. Frontend starten
@@ -65,6 +64,18 @@ uvicorn application:Application.app --host 127.0.0.1 --port 8000 # oder python r
 ```bash
 cd ..
 npm run build
+```
+
+### 5. CortexUI starten
+Zwei separate CMD/Screen Fenster öffnen und folgendes eingeben:
+
+```bash
+cd cortex-ui-master/api
+uvicorn application:Application.app --host 127.0.0.1 --port 8000 # oder python run.py
+```
+
+```bash
+cd cortex-ui-master
 npm run start # oder npm run dev
 ```
 
@@ -115,8 +126,22 @@ npm run start # oder npm run dev
   "selfSignup": {
     "enabled": false
   },
-  "generatedAt": "2025-07-20T20:00:00.000Z",
-  "version": "1.0.0"
+  "branding": {
+    "title": "CortexUI",
+    "logo": {
+      "data": "data:image/png;base64<B64_STRING>",
+      "contentType": "image/png",
+      "name": "cortex-ui.png",
+      "lastModified": 0
+    },
+    "subtitle": "CortexUI",
+    "contactMail": "info@cortex.ui",
+    "description": "CortexUI",
+    "contactPhone": "+49 123 456789",
+    "contactFax": "+49 987 654321"
+  },
+  "generatedAt": "2025-07-28T20:00:00.000Z",
+  "version": "1.1.0"
 }
 ```
 

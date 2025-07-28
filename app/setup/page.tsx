@@ -120,7 +120,7 @@ export default function SetupWizard() {
         const config = {
             ...setupData,
             generatedAt: new Date().toISOString(),
-            version: '1.0.0'
+            version: '1.1.0'
         };
         if (downloadConfig) {
             const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
