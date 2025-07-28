@@ -3,7 +3,7 @@ from typing import Optional, Literal
 from beanie import Document, Indexed
 from pydantic import Field, EmailStr
 from enum import Enum
-from pydantic.v1 import HttpUrl
+from pydantic import HttpUrl
 from application.modules.schemas.request_schemas import BrandingLogo
 
 
