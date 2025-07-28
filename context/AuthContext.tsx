@@ -167,6 +167,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const setupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/setup/status`);
                 const setupJson = await setupRes.json();
                 setSetupDone(setupJson.setupCompleted);
+                if (!setupJson.setupCompleted) return
 
                 await refreshWhiteLabelConfig();
                 await refreshSystemStatus();
