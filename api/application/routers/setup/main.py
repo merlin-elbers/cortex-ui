@@ -101,93 +101,96 @@ async def complete_setup(data: SetupData):
             exception=f"Lizenz wurde nicht akzeptiert",
             status_code=403
         )
-    # try:
-    setup_env(
-        self_signup=str(data.selfSignup.enabled).lower(),
-        mongodb_uri=data.database.uri,
-        mongodb_db_name=data.database.dbName,
-        setup_completed="true"
-    )
-
-    await init_db()
-
-    existing_admin = await User.find_one(User.role == "admin")
-
-    if existing_admin:
-        raise GeneralException(
-            is_ok=False,
-            status="ADMIN_EXISTS",
-            exception="Ein Admin-Benutzer existiert bereits.",
-            status_code=409
+    try:
+        setup_env(
+            mongodb_uri=data.database.uri,
+            mongodb_db_name=data.database.dbName,
         )
 
-    admin_user = User(
-        uid=str(uuid6.uuid7()),
-        email=data.adminUser.email,
-        password=hash_password(data.adminUser.password),
-        firstName=data.adminUser.firstName,
-        lastName=data.adminUser.lastName,
-        isActive=True,
-        role='admin',
-        lastSeen=datetime.datetime.now()
-    )
+        await init_db()
 
-    await admin_user.create()
+        existing_admin = await User.find_one(User.role == "admin")
 
-    await WhiteLabelConfig.find_all().delete()
+        if existing_admin:
+            raise GeneralException(
+                is_ok=False,
+                status="ADMIN_EXISTS",
+                exception="Ein Admin-Benutzer existiert bereits.",
+                status_code=409
+            )
 
-    new_white_label_config = WhiteLabelConfig(
-        uid=str(uuid6.uuid7()),
-        **data.branding.__dict__
-    )
-
-    await new_white_label_config.create()
-
-    if data.mailServer.type == 'microsoft365' and data.mailServer.microsoft365.authenticated:
-        await Microsoft365.find_all().delete()
-
-        new_configuration = Microsoft365(
+        admin_user = User(
             uid=str(uuid6.uuid7()),
-            **data.mailServer.microsoft365.__dict__
+            email=data.adminUser.email,
+            password=hash_password(data.adminUser.password),
+            firstName=data.adminUser.firstName,
+            lastName=data.adminUser.lastName,
+            isActive=True,
+            role='admin',
+            lastSeen=datetime.datetime.now()
         )
 
-        await new_configuration.create()
+        await admin_user.create()
 
-    elif data.mailServer.type == 'smtp' and data.mailServer.smtp and data.mailServer.smtp.tested:
-        await SMTPServer.find_all().delete()
+        await WhiteLabelConfig.find_all().delete()
 
-        encrypted_password = encrypt_password(data.mailServer.smtp.password)
-        del data.mailServer.smtp.password
-
-        new_configuration = SMTPServer(
+        new_white_label_config = WhiteLabelConfig(
             uid=str(uuid6.uuid7()),
-            password=encrypted_password,
-            **data.mailServer.smtp.__dict__
+            **data.branding.__dict__
         )
 
-        await new_configuration.create()
+        await new_white_label_config.create()
 
-    if data.analytics.connectionTested:
-        await MatomoConfig.find_all().delete()
+        if data.mailServer.type == 'microsoft365' and data.mailServer.microsoft365 is not None and data.mailServer.microsoft365.authenticated:
+            await Microsoft365.find_all().delete()
 
-        new_configuration = MatomoConfig(
-            uid=str(uuid6.uuid7()),
-            **data.analytics.__dict__
+            new_configuration = Microsoft365(
+                uid=str(uuid6.uuid7()),
+                **data.mailServer.microsoft365.__dict__
+            )
+
+            await new_configuration.create()
+
+        elif data.mailServer.type == 'smtp' and data.mailServer.smtp and data.mailServer.smtp.tested:
+            await SMTPServer.find_all().delete()
+
+            encrypted_password = encrypt_password(data.mailServer.smtp.password)
+            del data.mailServer.smtp.password
+
+            new_configuration = SMTPServer(
+                uid=str(uuid6.uuid7()),
+                password=encrypted_password,
+                **data.mailServer.smtp.__dict__
+            )
+
+            await new_configuration.create()
+
+        if data.analytics.connectionTested:
+            await MatomoConfig.find_all().delete()
+
+            new_configuration = MatomoConfig(
+                uid=str(uuid6.uuid7()),
+                **data.analytics.__dict__
+            )
+
+            await new_configuration.create()
+
+        logger.info(f"✅ Setup abgeschlossen von {data.adminUser.email} @ {datetime.datetime.now()}")
+
+        setup_env(
+            self_signup=str(data.selfSignup.enabled).lower(),
+            setup_completed="true"
         )
 
-        await new_configuration.create()
-
-    logger.info(f"✅ Setup abgeschlossen von {data.adminUser.email} @ {datetime.datetime.now()}")
-
-    return BaseResponse(
-        isOk=True,
-        status="DONE",
-        message="Setup erfolgreich abgeschlossen"
-    )
-    """except Exception as e:
+        return BaseResponse(
+            isOk=True,
+            status="DONE",
+            message="Setup erfolgreich abgeschlossen"
+        )
+    except Exception as e:
         raise GeneralException(
             is_ok=False,
             status="ERROR",
             exception=f"Fehler beim Abschließen des Setups: {str(e)}",
             status_code=500
-        )"""
+        )
