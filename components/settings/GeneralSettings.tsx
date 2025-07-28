@@ -11,7 +11,8 @@ import {Textarea} from "@/components/ui/textarea";
 import {deepEqual} from "@/lib/deepEqual";
 import {Checkbox} from "@/components/ui/checkbox";
 import Bus from "@/lib/bus";
-import FileUpload from "@/lib/file-upload";
+import FileUpload from "@/components/FileUpload";
+import {cleanObject} from "@/lib/cleanObject";
 
 function normalizeWhiteLabel(config?: Partial<WhiteLabelConfig>): WhiteLabelConfig {
     return {
@@ -45,13 +46,15 @@ export default function GeneralSettings() {
     }, [normalizedOriginal, newWhiteLabelConfig]);
 
     const handleSubmit = async() => {
+        const cleaned = cleanObject<WhiteLabelConfig>(newWhiteLabelConfig)
+
         fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/white-label`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             },
-            body: JSON.stringify(newWhiteLabelConfig)
+            body: JSON.stringify(cleaned)
         })
             .then(res => res.json())
             .then(json => {
