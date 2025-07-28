@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import {Upload, FileText, X, CheckCircle, AlertTriangle, Rocket} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Bus from "@/lib/bus";
-import {SetupDataZod} from "@/type-definitions/SetupDataZod";
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupDataZod} from "@/types/SetupDataZod";
+import {SetupData} from "@/types/SetupData";
 
 interface FileUploadStepProps {
     onNext: () => void;
@@ -83,11 +83,7 @@ export const FileUploadStep: React.FC<FileUploadStepProps> = ({ onNext, updateDa
         if (files.length > 0) {
             handleFileSelect(files[0]);
         }
-    };
-
-    const handleClick = () => {
-        fileInputRef.current?.click();
-    };
+    }
 
     const removeFile = () => {
         setFile(null);
@@ -136,7 +132,6 @@ export const FileUploadStep: React.FC<FileUploadStepProps> = ({ onNext, updateDa
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
-                    onClick={handleClick}
                 >
                     <input
                         ref={fileInputRef}
