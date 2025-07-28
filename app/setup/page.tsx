@@ -36,6 +36,7 @@ export default function SetupWizard() {
     const [currentStep, setCurrentStep] = useState(0)
     const [activateAnimation, setActivateAnimation] = useState(true)
     const [isSending, setIsSending] = useState(false)
+    const [isSuccessful, setIsSuccessful] = useState(false)
     const [downloadConfig, setDownloadConfig] = useState<boolean>(false)
     const [passwordOK, setPasswordOK] = useState<boolean>(false)
     const [setupData, setSetupData] = useState<SetupData>({
@@ -151,6 +152,7 @@ export default function SetupWizard() {
                 refreshSetupCompleted()
                 refreshSystemStatus()
                 refreshWhiteLabelConfig()
+                setIsSuccessful(true)
                 setTimeout(() => {
                     redirect('/login')
                 }, 3000)
@@ -256,11 +258,11 @@ export default function SetupWizard() {
                         currentStep === STEP_TITLES.length - 1 ? (
                             <Button
                                 onClick={transferConfig}
-                                disabled={!canProceed() || isSending}
+                                disabled={!canProceed() || isSending || isSuccessful}
                                 className={"flex items-center gap-2"}
                             >
                             <span>
-                                {isSending ? 'Übertrage Daten' : 'Setup abschließen'}
+                                {isSending ? 'Übertrage Daten' : isSuccessful ? 'Daten übertragen' : 'Setup abschließen'}
                             </span>
                                 <CircleCheck className={"w-4 h-4"} />
                             </Button>
