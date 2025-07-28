@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import Image from "next/image"
 import {Textarea} from "@/components/ui/textarea";
 import {cn} from "@/lib/utils";
 import Bus from "@/lib/bus";
+import {Checkbox} from "@/components/ui/checkbox";
 
 interface BrandingStepProps {
     data: SetupData;
@@ -21,7 +22,7 @@ export const BrandingStep: React.FC<BrandingStepProps> = ({ data, updateData }) 
     const [isValidFile, setIsValidFile] = useState<boolean | null>(null);
     const maxFileSize = 5 * 1024 * 1024;
 
-    const updateBranding = (field: string, value: string | object) => {
+    const updateBranding = (field: string, value: string | object | boolean) => {
         updateData('branding', { [field]: value });
     };
 
@@ -136,6 +137,21 @@ export const BrandingStep: React.FC<BrandingStepProps> = ({ data, updateData }) 
                 <p className={"text-xs text-gray-500"}>
                     Wird im Browser-Tab, auf der Login-Seite und in E-Mails verwendet.
                 </p>
+
+                <Checkbox
+                    id={"projectShowTitle"}
+                    checked={data.branding.showTitle}
+                    onCheckedChange={(checked) => updateBranding('showTitle', !!checked)}
+                    className={"mt-1"}
+                />
+                <div className={"space-y-2"}>
+                    <Label htmlFor={"selfSignupEnabled"} className={"text-base font-medium"}>
+                        Titel anzeigen
+                    </Label>
+                    <p className={"text-sm text-gray-500"}>
+                        Wenn aktiviert, wird der Titel, im Adminpanel in bestimmten Komponenten, mitgerendert
+                    </p>
+                </div>
 
                 <Label htmlFor={"projectSubtitle"}>
                     Untertitel

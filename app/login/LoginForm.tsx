@@ -62,39 +62,39 @@ const LoginForm = () => {
             className={"min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center p-4 relative"}>
             <div className={"w-full max-w-md"}>
                 <div className={"text-center mb-8"}>
-                    <div className={"text-center mb-8"}>
-                        {!whiteLabelConfig.logo?.data ? (
-                            <>
-                                <Link href={"https://github.com/merlin-elbers/cortex-ui"} target={"_blank"}>
-                                    <Image src={CortexUI} alt={"CortexUI"} className={"h-12 w-auto mx-auto mb-4"} />
-                                </Link>
-                                <p className={"text-gray-500"}>
-                                    Melden Sie sich an, um Ihre Website zu verwalten
-                                </p>
-                            </>
-                        ) : (
-                            <div className={"mb-4 bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-lg p-2 flex flex-col gap-2"}>
-                                <Link
-                                    href={"https://github.com/merlin-elbers/cortex-ui"}
-                                    className={"flex gap-2 items-center justify-center"}
-                                >
-                                    <Image
-                                        src={whiteLabelConfig.logo.data}
-                                        width={500}
-                                        height={500}
-                                        alt={whiteLabelConfig.logo.name ?? 'Logo'}
-                                        className={"h-12 w-auto"}
-                                    />
+                    {!whiteLabelConfig.logo?.data ? (
+                        <>
+                            <Link href={"https://github.com/merlin-elbers/cortex-ui"} target={"_blank"}>
+                                <Image src={CortexUI} alt={"CortexUI"} className={"h-12 w-auto mx-auto mb-4"} />
+                            </Link>
+                            <p className={"text-gray-500"}>
+                                Melden Sie sich an, um Ihre Website zu verwalten
+                            </p>
+                        </>
+                    ) : (
+                        <div className={"space-y-4"}>
+                            <Link
+                                href={"https://github.com/merlin-elbers/cortex-ui"}
+                                className={"flex gap-4 items-end justify-center"}
+                            >
+                                <Image
+                                    src={whiteLabelConfig.logo.data}
+                                    width={500}
+                                    height={500}
+                                    alt={whiteLabelConfig.logo.name ?? 'Logo'}
+                                    className={"h-12 w-auto"}
+                                />
+                                {whiteLabelConfig.showTitle && (
                                     <h1 className={"text-slate-900 text-2xl"}>
                                         {whiteLabelConfig.title}
                                     </h1>
-                                </Link>
-                                <p className={"text-gray-500"}>
-                                    Melden Sie sich an, um Ihre Website zu verwalten
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                                )}
+                            </Link>
+                            <p className={"text-gray-500"}>
+                                Melden Sie sich an, um Ihre Website zu verwalten
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <div className={"bg-slate-50/50 backdrop-blur-sm border border-slate-200 rounded-lg p-8 shadow-2xl"}>

@@ -40,6 +40,7 @@ class BrandingLogo(BaseModel):
 class Branding(BaseModel):
     logo: Optional[BrandingLogo] = None
     title: str
+    showTitle: bool = False
     subtitle: Optional[str] = None
     description: Optional[str] = None
     contactMail: Optional[EmailStr] = None

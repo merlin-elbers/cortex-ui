@@ -26,6 +26,7 @@ export const SetupDataZod = z.object({
             })
             .optional(),
         title: z.string(),
+        showTitle: z.boolean().default(false),
         subtitle: z.string().optional(),
         description: z.string().optional(),
         contactEmail: z.string().optional(),

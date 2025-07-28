@@ -137,8 +137,9 @@ class MatomoConfig(Document):
 
 class WhiteLabelConfig(Document):
     uid: Indexed(str, unique=True)
-    logo: BrandingLogo | None = None
+    logo: Optional[BrandingLogo] = None
     title: str
+    showTitle: bool = False
     subtitle: Optional[str] = None
     description: Optional[str] = None
     contactMail: Optional[EmailStr] = None
@@ -158,6 +159,7 @@ class WhiteLabelConfig(Document):
                 "lastModified": datetime.datetime.now()
             },
             "title": "CortexUI Dashboard",
+            "showTitle": False,
             "subtitle": "Innovatives, modernes und modulares Headless CMS",
             "description": "CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.",
             "contactMail": "info@cortex.ui",

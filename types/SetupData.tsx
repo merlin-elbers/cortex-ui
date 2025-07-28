@@ -22,6 +22,7 @@ export interface SetupData {
             lastModified?: string | Date | number | null
         },
         title: string
+        showTitle: boolean
         subtitle?: string
         description?: string
         contactMail?: string

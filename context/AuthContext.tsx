@@ -23,6 +23,12 @@ interface WhiteLabelLogo {
 interface WhiteLabelConfig {
     logo?: WhiteLabelLogo;
     title: string;
+    showTitle: boolean;
+    subtitle?: string;
+    description?: string;
+    contactMail?: string;
+    contactPhone?: string;
+    contactFax?: string;
 }
 
 interface ServerStatus {
@@ -55,6 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [setupDone, setSetupDone] = useState(true);
     const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>({
         title: 'Cortex UI',
+        showTitle: false,
     });
     const [serverStatus, setServerStatus] = useState<ServerStatus>({
         databaseOnline: false,
@@ -72,6 +79,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setWhiteLabelConfig({
                 logo: json.logo !== null ? json.logo : undefined,
                 title: json.title ?? 'Cortex UI',
+                showTitle: json.showTitle,
+                subtitle: json.subtitle ?? 'Innovatives, modernes und modulares Headless CMS',
+                description: json.description ?? 'CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.',
+                contactMail: json.contactMail ?? 'info@cortex.ui',
+                contactPhone: json.contactPhone ?? '+49 123 456789',
+                contactFax: json.contactFax ?? '+49 987 654321',
             });
         } catch (err) {
             Bus.emit('notification', {

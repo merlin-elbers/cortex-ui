@@ -55,7 +55,14 @@ const AdminSidebar = () => {
             <div className={"p-6 border-b border-slate-200"}>
                 <Link href={"/"} className={"flex flex-col items-center gap-3"}>
                     {whiteLabelConfig.logo ? (
-                        <Image src={whiteLabelConfig.logo.data as string} alt={whiteLabelConfig.logo.name as string} className={"h-14 w-auto"} width={500} height={500} />
+                        <div className={"space-y-3"}>
+                            <Image src={whiteLabelConfig.logo.data as string} alt={whiteLabelConfig.logo.name as string} className={"h-14 w-auto"} width={500} height={500} />
+                            {whiteLabelConfig.showTitle && (
+                                <h1 className={"text-slate-900 font-bold text-lg text-center"}>
+                                    {whiteLabelConfig.title}
+                                </h1>
+                            )}
+                        </div>
                     ) : (
                         <Image src={CortexUI} alt={"CortexUI"} className={"h-10 w-auto"} />
                     )}
