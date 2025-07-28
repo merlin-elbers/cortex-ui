@@ -1,18 +1,18 @@
 import datetime
-import os
 from starlette.requests import Request
 from uuid6 import uuid7
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette import status
+from application.modules.auth.dependencies import get_current_user
+from application.modules.auth.login_logger import log_login_attempt
+from application.modules.auth.security import create_access_token, hash_password
+from application.modules.auth.service import verify_password
 from application.modules.database.database_models import User, LoginStatus
 from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse, \
     GeneralExceptionSchema
 from application.modules.schemas.schemas import GetUser, CreateUserSelf
 from application.modules.utils.settings import get_settings
-from application.routers.auth.utils import verify_password, create_access_token, get_current_user, hash_password, \
-    log_login_attempt
 
 router = APIRouter()
 

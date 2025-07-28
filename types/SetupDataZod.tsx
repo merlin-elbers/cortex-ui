@@ -26,6 +26,11 @@ export const SetupDataZod = z.object({
             })
             .optional(),
         title: z.string(),
+        subtitle: z.string().optional(),
+        description: z.string().optional(),
+        contactEmail: z.string().optional(),
+        contactPhone: z.string().optional(),
+        contactFax: z.string().optional(),
     }),
     mailServer: z.object({
         type: z.enum(["smtp", "microsoft365"]),

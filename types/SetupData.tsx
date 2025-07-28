@@ -22,6 +22,11 @@ export interface SetupData {
             lastModified?: string | Date | number | null
         },
         title: string
+        subtitle?: string
+        description?: string
+        contactMail?: string
+        contactPhone?: string
+        contactFax?: string
     };
     mailServer: {
         type: 'smtp' | 'microsoft365'
