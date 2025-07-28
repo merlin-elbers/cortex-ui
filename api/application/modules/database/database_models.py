@@ -3,7 +3,7 @@ from typing import Optional, Literal
 from beanie import Document, Indexed
 from pydantic import Field, EmailStr
 from enum import Enum
-
+from pydantic.v1 import HttpUrl
 from application.modules.schemas.request_schemas import BrandingLogo
 
 
@@ -119,7 +119,7 @@ class SMTPServer(Document):
 
 class MatomoConfig(Document):
     uid: Indexed(str, unique=True)
-    matomoUrl: str
+    matomoUrl: HttpUrl
     matomoSiteId: str | int
     matomoApiKey: str
 
