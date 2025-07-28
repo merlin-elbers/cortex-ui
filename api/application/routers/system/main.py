@@ -10,7 +10,7 @@ import os
 from starlette.responses import FileResponse
 
 from application.modules.auth.dependencies import require_role
-from application.modules.schemas.request_schemas import M365TokenRequest
+from application.modules.schemas.request_schemas import M365TokenRequest, Branding
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
     BaseResponse, GeneralExceptionSchema, PingResponse, MicrosoftResponse, WhiteLabelResponse, StatusResponse
 from application.modules.database.database_models import UserRole, WhiteLabelConfig, SMTPServer, Microsoft365, \
@@ -408,8 +408,9 @@ async def get_white_label():
         isOk=True,
         status="OK",
         message=f"WhiteLabelConfig wurde gefunden",
-        logo=white_label_config.logo,
-        title=white_label_config.title,
+        data=Branding(
+            **white_label_config.__dict__
+        )
     )
 
 
