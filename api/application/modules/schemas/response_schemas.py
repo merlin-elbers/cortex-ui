@@ -2,7 +2,7 @@ from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
 
-from application.modules.schemas.request_schemas import BrandingLogo, Branding
+from application.modules.schemas.request_schemas import BrandingLogo, Branding, MailServer
 from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema
 
 
@@ -135,5 +135,9 @@ class StatusResponse(BaseResponse):
 
 class MatomoAnalyticsResponse(BaseResponse):
     data: MatomoAnalytics
+
+
+class MailServerResponse(BaseResponse):
+    data: MailServer
 
 # endregion

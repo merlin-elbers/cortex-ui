@@ -27,7 +27,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
 
     const refreshWhiteLabelConfig = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/white-label`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/white-label`);
             const json = await res.json();
 
             setWhiteLabelConfig({

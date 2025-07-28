@@ -45,7 +45,7 @@ export default function GeneralSettings() {
     }, [normalizedOriginal, newWhiteLabelConfig]);
 
     const handleSubmit = async() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/white-label`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/white-label`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

@@ -73,7 +73,7 @@ class Application:
         return self.__app
 
     def __init_routes(self):
-        from application.routers import auth, users, system, setup, analytics
+        from application.routers import auth, users, system, setup, analytics, settings
 
         routers = [
             (auth.router, "/auth"),
@@ -81,6 +81,7 @@ class Application:
             (system.router, "/system"),
             (setup.router, "/setup"),
             (analytics.router, "/analytics"),
+            (settings.router, "/settings"),
         ]
 
         for router, prefix in routers:

@@ -31,7 +31,7 @@ export default function M365Popup() {
         if (code && tenantId && clientId && clientSecret) {
             const fetchToken = async () => {
                 try {
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/system/token`, {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/m365`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
