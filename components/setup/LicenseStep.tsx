@@ -3,7 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, FileText, ExternalLink } from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import Link from "next/link";
 
 interface LicenseStepProps {
@@ -144,17 +144,18 @@ export const LicenseStep: React.FC<LicenseStepProps> = ({ data, updateData, onDo
                         </p>
                     </div>
 
-                    <Button
-                        variant={"outline"}
-                        size={"sm"}
-                        onClick={() => window.open('https://opensource.org/licenses/MIT', '_blank')}
-                        className={"flex items-center gap-2"}
-                    >
-                        <ExternalLink className={"w-4 h-4"} />
-                        <span>
-                            Vollständige Lizenz anzeigen
-                        </span>
-                    </Button>
+                    <Link href={'http://www.apache.org/licenses/LICENSE-2.0'} target={"_blank"}>
+                        <Button
+                            variant={"outline"}
+                            size={"sm"}
+                            className={"flex items-center gap-2"}
+                        >
+                            <ExternalLink className={"w-4 h-4"} />
+                            <span>
+                                Vollständige Lizenz anzeigen
+                            </span>
+                        </Button>
+                    </Link>
                 </div>
 
                 <div className={"flex items-start space-x-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-lg"}>
