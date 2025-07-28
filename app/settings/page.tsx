@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react';
-import {Globe, Mail, Database, BarChart3} from 'lucide-react';
+import {Globe, Mail, Database, BarChart3, Archive} from 'lucide-react';
 import {Button} from "@/components/ui/button";
 import GeneralSettings from "@/components/settings/GeneralSettings";
 import {SettingTabs} from "@/types/Settings";
@@ -17,7 +17,7 @@ const AdminSettings = () => {
         { id: 'email', label: 'E-Mail', icon: Mail, component: GeneralSettings },
         { id: 'database', label: 'Datenbank', icon: Database, component: GeneralSettings },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, component: GeneralSettings },
-        { id: 'backup', label: 'Backup', icon: Database, component: GeneralSettings },
+        { id: 'backup', label: 'Backup', icon: Archive, component: GeneralSettings },
     ]
 
     if (!isAuthenticated) return redirect('/login');
