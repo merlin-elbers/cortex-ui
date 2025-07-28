@@ -1,61 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import Bus from "@/lib/bus";
-
-export type UserPublic = {
-    uid: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-    isActive: boolean;
-    lastSeen: Date | string;
-};
-
-interface WhiteLabelLogo {
-    contentType?: string;
-    name?: string;
-    data?: string;
-    lastModified?: string | number;
-}
-
-interface WhiteLabelConfig {
-    logo?: WhiteLabelLogo;
-    title: string;
-    showTitle: boolean;
-    subtitle?: string;
-    description?: string;
-    contactMail?: string;
-    contactPhone?: string;
-    contactFax?: string;
-}
-
-interface ServerStatus {
-    databaseOnline: boolean;
-    selfSignupEnabled: boolean;
-    smtpServerConfigured: boolean;
-    m365Configured: boolean;
-    matomoConfigured: boolean;
-}
-
-type AuthContextType = {
-    user: UserPublic | null;
-    isAuthenticated: boolean;
-    setupCompleted: boolean;
-    loading: boolean;
-    login: (email: string, password: string) => Promise<boolean>;
-    logout: () => void;
-    refreshSetupCompleted: () => void;
-    whiteLabelConfig: WhiteLabelConfig;
-    serverStatus: ServerStatus;
-    refreshWhiteLabelConfig: () => void;
-    refreshSystemStatus: () => void;
-};
+import {AuthContextType} from "@/types/Context";
+import {UserPublic} from "@/types/User";
+import {WhiteLabelConfig} from "@/types/WhiteLabel";
+import {ServerStatus} from "@/types/System";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     const [user, setUser] = useState<UserPublic | null>(null);
     const [loading, setLoading] = useState(true);
     const [setupDone, setSetupDone] = useState(true);
@@ -78,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             setWhiteLabelConfig({
                 logo: json.data.logo !== null ? json.data.logo : undefined,
-                title: json.data.title ?? 'Cortex UI',
+                title: json.data.title ?? '',
                 showTitle: json.data.showTitle,
                 subtitle: json.data.subtitle ?? '',
                 description: json.data.description ?? '',
