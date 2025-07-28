@@ -12,16 +12,14 @@ import {
 import {useAuth} from "@/context/AuthContext";
 import {redirect} from "next/navigation";
 import React, {useEffect, useState} from "react";
-import {MatomoAnalytics} from "@/type-definitions/Matomo";
+import {MatomoAnalytics} from "@/types/Matomo";
 import Loader from "@/components/Loader";
 
 const AdminDashboard = () => {
-    const { user, isAuthenticated, serverStatus } = useAuth()
-    const [loading, setLoading] = useState<boolean>(true)
+    const { user, isAuthenticated, serverStatus, loading } = useAuth()
     const [analytics, setAnalytics] = useState<MatomoAnalytics | null>(null)
 
     useEffect(() => {
-        setLoading(true)
         if (serverStatus.matomoConfigured) {
             fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/analytics/matomo`, {
                 method: "GET",
@@ -49,7 +47,6 @@ const AdminDashboard = () => {
                         setAnalytics({...json.data})
                     }
                 })
-                .then(() => setLoading(false))
         }
     }, [serverStatus]);
 
@@ -63,8 +60,9 @@ const AdminDashboard = () => {
     }
 
     if (loading) return <Loader />
+    if (!isAuthenticated) return redirect('/login')
 
-    return isAuthenticated ? (
+    return (
         <div className={"p-6 space-y-6"}>
 
             <div className={"flex items-center justify-between"}>
@@ -176,7 +174,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
         </div>
-    ) : redirect('/login')
+    )
 };
 
 export default AdminDashboard;

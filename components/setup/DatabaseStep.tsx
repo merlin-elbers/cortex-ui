@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Database, CheckCircle, Loader2 } from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import Bus from "@/lib/bus";
 
 interface DatabaseStepProps {

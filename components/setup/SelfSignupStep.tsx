@@ -2,7 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { UserPlus, Shield, Globe } from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 
 interface SelfSignupStepProps {
     data: SetupData;

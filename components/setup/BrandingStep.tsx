@@ -3,12 +3,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {Palette, Upload, AlertCircle, Images} from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import Image from "next/image"
 
 interface BrandingStepProps {
     data: SetupData;
     updateData: (stepKey: keyof SetupData, data: object) => void;
+}
+
+function TextArea(props: { id: string, placeholder: string, value: string, onChange: (e) => void }) {
+    return null;
 }
 
 export const BrandingStep: React.FC<BrandingStepProps> = ({ data, updateData }) => {
@@ -46,6 +50,71 @@ export const BrandingStep: React.FC<BrandingStepProps> = ({ data, updateData }) 
                 <p className={"text-gray-500 text-sm"}>
                     Personalisieren Sie das Erscheinungsbild Ihres CortexUI Dashboards.
                 </p>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor={"projectTitle"}>
+                    Website Titel <span className={"text-red-500"}>*</span>
+                </Label>
+                <Input
+                    id={"projectTitle"}
+                    placeholder={"CortexUI"}
+                    value={data.branding.title}
+                    onChange={(e) => updateBranding('title', e.target.value)}
+                />
+                <p className={"text-xs text-gray-500"}>
+                    Wird im Browser-Tab, auf der Login-Seite und in E-Mails verwendet.
+                </p>
+
+                <Label htmlFor={"projectSubtitle"}>
+                    Untertitel
+                </Label>
+                <Input
+                    id={"projectSubtitle"}
+                    placeholder={"Innovatives, modernes und modulares Headless CMS"}
+                    value={data.branding.subtitle}
+                    onChange={(e) => updateBranding('subtitle', e.target.value)}
+                />
+
+                <Label htmlFor={"projectDescription"}>
+                    Beschreibung
+                </Label>
+                <TextArea
+                    id={"projectDescription"}
+                    placeholder={"CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience."}
+                    value={data.branding.description ? data.branding.description : ''}
+                    onChange={(e) => updateBranding('description', e.target.value)}
+                />
+
+                <Label htmlFor={"projectContactMail"}>
+                    Kontakt E-Mail
+                </Label>
+                <Input
+                    id={"projectContactMail"}
+                    placeholder={"info@cortex.ui"}
+                    value={data.branding.contactMail}
+                    onChange={(e) => updateBranding('contactMail', e.target.value)}
+                />
+
+                <Label htmlFor={"projectContactPhone"}>
+                    Telefon
+                </Label>
+                <Input
+                    id={"projectContactPhone"}
+                    placeholder={"+49 123 456789"}
+                    value={data.branding.contactPhone}
+                    onChange={(e) => updateBranding('contactPhone', e.target.value)}
+                />
+
+                <Label htmlFor={"projectContactFax"}>
+                    Telefax
+                </Label>
+                <Input
+                    id={"projectContactFax"}
+                    placeholder={"+49 987 654321"}
+                    value={data.branding.contactFax}
+                    onChange={(e) => updateBranding('contactFax', e.target.value)}
+                />
             </div>
 
             <div className={"space-y-6"}>
@@ -110,21 +179,6 @@ export const BrandingStep: React.FC<BrandingStepProps> = ({ data, updateData }) 
                             className={"hidden"}
                         />
                     </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor={"projectTitle"}>
-                        Name der App <span className={"text-red-500"}>*</span>
-                    </Label>
-                    <Input
-                        id={"projectTitle"}
-                        placeholder={"CortexUI"}
-                        value={data.branding.title}
-                        onChange={(e) => updateBranding('title', e.target.value)}
-                    />
-                    <p className={"text-xs text-gray-500"}>
-                        Wird im Browser-Tab, auf der Login-Seite und in E-Mails verwendet.
-                    </p>
                 </div>
 
                 {data.selfSignup?.enabled && (

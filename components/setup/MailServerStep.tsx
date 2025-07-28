@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {Mail, Server, CheckCircle, Loader2, ExternalLink, AlertCircle} from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import Bus from "@/lib/bus";
 import Image from "next/image";
 import Microsoft from "@/assets/Microsoft.png"

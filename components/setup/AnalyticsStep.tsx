@@ -4,7 +4,7 @@ import {useState} from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {BarChart3, TrendingUp, Shield, Settings, MoveRight, Loader2, CheckCircle} from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import {Button} from "@/components/ui/button";
 import Bus from "@/lib/bus";
 

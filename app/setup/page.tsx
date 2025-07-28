@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import {ChevronLeft, ChevronRight, CircleCheck} from 'lucide-react';
-import {SetupData} from "@/type-definitions/SetupData";
+import {SetupData} from "@/types/SetupData";
 import {AdminUserStep} from "@/components/setup/AdminUserStep";
 import {DatabaseStep} from "@/components/setup/DatabaseStep";
 import {SelfSignupStep} from "@/components/setup/SelfSignupStep";
