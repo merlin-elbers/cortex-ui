@@ -80,11 +80,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 logo: json.data.logo !== null ? json.data.logo : undefined,
                 title: json.data.title ?? 'Cortex UI',
                 showTitle: json.data.showTitle,
-                subtitle: json.data.subtitle ?? 'Innovatives, modernes und modulares Headless CMS',
-                description: json.data.description ?? 'CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.',
-                contactMail: json.data.contactMail ?? 'info@cortex.ui',
-                contactPhone: json.data.contactPhone ?? '+49 123 456789',
-                contactFax: json.data.contactFax ?? '+49 987 654321',
+                subtitle: json.data.subtitle ?? '',
+                description: json.data.description ?? '',
+                contactMail: json.data.contactMail ?? '',
+                contactPhone: json.data.contactPhone ?? '',
+                contactFax: json.data.contactFax ?? '',
             });
         } catch (err) {
             Bus.emit('notification', {
