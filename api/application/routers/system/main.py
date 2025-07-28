@@ -8,7 +8,6 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from time import perf_counter
 import os
 from starlette.responses import FileResponse
-
 from application.modules.auth.dependencies import require_role
 from application.modules.schemas.request_schemas import M365TokenRequest, Branding
 from application.modules.schemas.response_schemas import ValidationError, GeneralException, DbHealthResponse, \
@@ -19,6 +18,66 @@ from application.modules.schemas.schemas import ServerStatusSchema
 from application.modules.utils.settings import get_settings
 
 router = APIRouter()
+
+
+# region System Health
+
+@router.get("/status",
+            status_code=200,
+            tags=["🔍 System"],
+            name="Systemstatus",
+            description="""
+                Prüft den aktuellen Zustand und die Konfiguration des CortexUI Systems.
+
+                Es wird geprüft, ob folgende Systemkomponenten korrekt eingerichtet sind:
+
+                ✅ Enthält:
+                - Self-Signup: Ist die Nutzer-Selbstregistrierung aktiviert?
+                - SMTP: Ist ein Mailserver oder Microsoft 365 erfolgreich konfiguriert?
+                - Matomo: Ist ein Matomo API-Key vorhanden und funktionsfähig?
+                - Datenbank: Ist die MongoDB-Verbindung aktiv?
+
+                Diese Route wird im Dashboard verwendet,
+                um die Integrität des Systems zu prüfen.
+
+                🛡️ Kein Auth-Token erforderlich, da sie vor dem Login genutzt werden kann.
+            """,
+            response_description="Systemstatus in strukturierter Form",
+            responses={
+                200: {
+                    'description': 'Alle Statusdaten erfolgreich geladen',
+                    'model': StatusResponse
+                },
+                500: {
+                    'description': 'Ein oder mehrere Komponenten sind nicht erreichbar / fehlerhaft konfiguriert',
+                    'model': GeneralExceptionSchema
+                }
+            })
+async def get_status():
+    settings = get_settings()
+
+    database_online = False
+    uri = settings.MONGODB_URI
+    if uri:
+        client = AsyncIOMotorClient(uri)
+        result = await client.admin.command("ping")
+
+        if result.get("ok") == 1:
+            database_online = True
+
+    return StatusResponse(
+        isOk=True,
+        status="OK",
+        message=f"Status überprüft",
+        data=ServerStatusSchema(
+            databaseOnline=database_online,
+            selfSignupEnabled=settings.SELF_SIGNUP,
+            smtpServerConfigured=True if await SMTPServer.find_one() else False,
+            m365Configured=True if await Microsoft365.find_one() else False,
+            matomoConfigured=True if await MatomoConfig.find_one() else False,
+        )
+    )
+
 
 
 @router.get('/ping',
@@ -158,6 +217,10 @@ async def mongodb_health(
         )
 
 
+# endregion
+
+# region Backups
+
 @router.get("/backup/start",
             status_code=200,
             name="Backup starten",
@@ -283,6 +346,10 @@ async def get_latest_backup(
     )
 
 
+# endregion
+
+# region M365
+
 @router.post("/token",
              status_code=200,
              name="Microsoft 365 Token speichern",
@@ -368,33 +435,35 @@ async def receive_m365_token(data: M365TokenRequest):
         )
 
 
-@router.get("/white-label",
-            status_code=200,
-            name="Microsoft 365 Token speichern",
-            tags=["🔍 System"],
-            description="""
-                Verarbeitet den Microsoft Authorization Code und tauscht ihn gegen ein Access + Refresh Token.
-                Token wird gespeichert und ist bereit für weitere API-Nutzung mit O365 (z. B. Mailversand).
-            """,
-            response_description="Zugriffstoken gespeichert",
-            responses={
-                200: {
-                    'model': BaseResponse,
-                    'description': 'Zugriffstoken gespeichert'
-                },
-                400: {
-                    'model': GeneralExceptionSchema,
-                    'description': 'Fehler beim Verarbeiten des Codes'
-                },
-                422: {
-                    'model': ValidationError,
-                    'description': 'Validierungsfehler in der Anfrage'
-                },
-                500: {
-                    'model': GeneralExceptionSchema,
-                    'description': 'Interner Serverfehler während der Verarbeitung der Daten'
-                }
-            })
+# endregion
+
+# region WhiteLabel
+
+@router.get(
+    "/white-label",
+    status_code=200,
+    name="WhiteLabel Konfiguration abrufen",
+    tags=["🔍 System"],
+    description="""
+        Gibt die aktuell gespeicherte WhiteLabel-Konfiguration zurück. 
+        Diese umfasst u.a. Logo-URL, App-Titel und weitere UI-bezogene Einstellungen.
+    """,
+    response_description="Aktuelle WhiteLabel-Konfiguration",
+    responses={
+        200: {
+            "model": WhiteLabelResponse,
+            "description": "WhiteLabel-Daten erfolgreich geladen"
+        },
+        404: {
+            "model": GeneralExceptionSchema,
+            "description": "Keine Konfiguration gefunden"
+        },
+        500: {
+            "model": GeneralExceptionSchema,
+            "description": "Interner Serverfehler bei der Datenabfrage"
+        }
+    }
+)
 async def get_white_label():
     white_label_config = await WhiteLabelConfig.find_one()
     if not white_label_config:
@@ -414,58 +483,58 @@ async def get_white_label():
     )
 
 
-@router.get("/status",
-            status_code=200,
-            tags=["🔍 System"],
-            name="Systemstatus",
-            description="""
-                Prüft den aktuellen Zustand und die Konfiguration des CortexUI Systems.
+@router.put(
+    "/white-label",
+    status_code=201,
+    name="WhiteLabel Konfiguration speichern",
+    tags=["🔍 System"],
+    description="""
+        Speichert eine aktualisierte WhiteLabel-Konfiguration. 
+        Diese Konfiguration wird systemweit verwendet, um das UI visuell anzupassen.
+        Erfordert Adminrechte.
+    """,
+    response_description="Konfiguration gespeichert",
+    responses={
+        201: {
+            "model": BaseResponse,
+            "description": "WhiteLabel-Konfiguration erfolgreich gespeichert"
+        },
+        400: {
+            "model": GeneralExceptionSchema,
+            "description": "Ungültige Konfigurationsdaten übermittelt"
+        },
+        422: {
+            "model": ValidationError,
+            "description": "Validierungsfehler in der übermittelten Konfiguration"
+        },
+        500: {
+            "model": GeneralExceptionSchema,
+            "description": "Fehler beim Speichern der Konfiguration"
+        }
+    }
+)
+async def put_white_label(
+        data: Branding,
+        _user = Depends(require_role('admin'))
+):
+    white_label_config = await WhiteLabelConfig.find_one()
+    if not white_label_config:
+        raise GeneralException(
+            is_ok=False,
+            status="CONFIG_NOT_FOUND",
+            exception="WhiteLabelConfig wurde nicht gefunden",
+            status_code=500
+        )
 
-                Es wird geprüft, ob folgende Systemkomponenten korrekt eingerichtet sind:
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(white_label_config, field, value)
 
-                ✅ Enthält:
-                - Self-Signup: Ist die Nutzer-Selbstregistrierung aktiviert?
-                - SMTP: Ist ein Mailserver oder Microsoft 365 erfolgreich konfiguriert?
-                - Matomo: Ist ein Matomo API-Key vorhanden und funktionsfähig?
-                - Datenbank: Ist die MongoDB-Verbindung aktiv?
+    await white_label_config.save()
 
-                Diese Route wird im Dashboard verwendet,
-                um die Integrität des Systems zu prüfen.
-
-                🛡️ Kein Auth-Token erforderlich, da sie vor dem Login genutzt werden kann.
-            """,
-            response_description="Systemstatus in strukturierter Form",
-            responses={
-                200: {
-                    'description': 'Alle Statusdaten erfolgreich geladen',
-                    'model': StatusResponse
-                },
-                500: {
-                    'description': 'Ein oder mehrere Komponenten sind nicht erreichbar / fehlerhaft konfiguriert',
-                    'model': GeneralExceptionSchema
-                }
-            })
-async def get_status():
-    settings = get_settings()
-
-    database_online = False
-    uri = settings.MONGODB_URI
-    if uri:
-        client = AsyncIOMotorClient(uri)
-        result = await client.admin.command("ping")
-
-        if result.get("ok") == 1:
-            database_online = True
-
-    return StatusResponse(
+    return BaseResponse(
         isOk=True,
         status="OK",
-        message=f"Status überprüft",
-        data=ServerStatusSchema(
-            databaseOnline=database_online,
-            selfSignupEnabled=settings.SELF_SIGNUP,
-            smtpServerConfigured=True if await SMTPServer.find_one() else False,
-            m365Configured=True if await Microsoft365.find_one() else False,
-            matomoConfigured=True if await MatomoConfig.find_one() else False,
-        )
+        message="WhiteLabelConfig wurde aktualisiert",
     )
+
+# endregion
