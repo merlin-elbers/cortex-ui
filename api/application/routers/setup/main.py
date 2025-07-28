@@ -2,6 +2,7 @@ import datetime
 import uuid6
 from fastapi import APIRouter
 from application import init_db
+from application.modules.auth.security import hash_password
 from application.modules.database.connection import logger
 from application.modules.database.database_models import Microsoft365, SMTPServer, User, MatomoConfig, WhiteLabelConfig
 from application.modules.schemas.request_schemas import SetupData
@@ -10,7 +11,6 @@ from application.modules.schemas.response_schemas import SetupResponse, GeneralE
 from application.modules.setup.setup_env import setup_env
 from application.modules.utils.crypto import encrypt_password
 from application.modules.utils.settings import get_settings
-from application.routers.auth.utils import hash_password
 
 router = APIRouter()
 
@@ -138,8 +138,7 @@ async def complete_setup(data: SetupData):
 
     new_white_label_config = WhiteLabelConfig(
         uid=str(uuid6.uuid7()),
-        logo=data.branding.logo if data.branding.logo else None,
-        title=data.branding.title
+        **data.branding.__dict__
     )
 
     await new_white_label_config.create()
@@ -149,11 +148,7 @@ async def complete_setup(data: SetupData):
 
         new_configuration = Microsoft365(
             uid=str(uuid6.uuid7()),
-            displayName=data.mailServer.microsoft365.senderName,
-            email=str(data.mailServer.microsoft365.senderEmail),
-            clientId=data.mailServer.microsoft365.clientId,
-            clientSecret=data.mailServer.microsoft365.secretKey,
-            tenantId=data.mailServer.microsoft365.tenantId,
+            **data.mailServer.microsoft365.__dict__
         )
 
         await new_configuration.create()
@@ -161,14 +156,13 @@ async def complete_setup(data: SetupData):
     elif data.mailServer.type == 'smtp' and data.mailServer.smtp and data.mailServer.smtp.tested:
         await SMTPServer.find_all().delete()
 
+        encrypted_password = encrypt_password(data.mailServer.smtp.password)
+        del data.mailServer.smtp.password
+
         new_configuration = SMTPServer(
             uid=str(uuid6.uuid7()),
-            host=data.mailServer.smtp.host,
-            port=data.mailServer.smtp.port,
-            username=data.mailServer.smtp.username,
-            password=encrypt_password(data.mailServer.smtp.password),
-            senderName=data.mailServer.smtp.senderName,
-            senderEmail=str(data.mailServer.smtp.senderEmail),
+            password=encrypted_password,
+            **data.mailServer.smtp.__dict__
         )
 
         await new_configuration.create()
@@ -178,9 +172,7 @@ async def complete_setup(data: SetupData):
 
         new_configuration = MatomoConfig(
             uid=str(uuid6.uuid7()),
-            matomoUrl=str(data.analytics.matomoUrl),
-            matomoSiteId=data.analytics.matomoSiteId,
-            matomoApiKey=encrypt_password(data.analytics.matomoApiKey)
+            **data.analytics.__dict__
         )
 
         await new_configuration.create()

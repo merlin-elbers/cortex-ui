@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional, Literal
 from beanie import Document, Indexed
-from pydantic import Field
+from pydantic import Field, EmailStr
 from enum import Enum
 
 from application.modules.schemas.request_schemas import BrandingLogo
@@ -139,6 +139,11 @@ class WhiteLabelConfig(Document):
     uid: Indexed(str, unique=True)
     logo: BrandingLogo | None = None
     title: str
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    contactMail: Optional[EmailStr] = None
+    contactPhone: Optional[str] = None
+    contactFax: Optional[str] = None
 
     class Settings:
         name = "WhiteLabelConfig"
@@ -153,4 +158,9 @@ class WhiteLabelConfig(Document):
                 "lastModified": datetime.datetime.now()
             },
             "title": "CortexUI Dashboard",
+            "subtitle": "Innovatives, modernes und modulares Headless CMS",
+            "description": "CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.",
+            "contactMail": "info@cortex.ui",
+            "contactPhone": "+49 123 456789",
+            "contactFax": "+49 987 654321",
         }

@@ -40,6 +40,11 @@ class BrandingLogo(BaseModel):
 class Branding(BaseModel):
     logo: Optional[BrandingLogo] = None
     title: str
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    contactMail: Optional[EmailStr] = None
+    contactPhone: Optional[str] = None
+    contactFax: Optional[str] = None
 
 
 class SMTPSettings(BaseModel):
