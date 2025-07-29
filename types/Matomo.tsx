@@ -32,6 +32,7 @@ export interface MatomoTopCountry {
     actionsLastWeek: number;
     averageSessionLengthLastWeek: number;
     bounceRateLastWeek: number;
+    logo: string | null;
 }
 
 export interface MatomoAnalytics {
@@ -39,4 +40,5 @@ export interface MatomoAnalytics {
     topCountries: MatomoTopCountry[];
     topReferrers: MatomoTopReferrer[];
     topPages: MatomoTopPage[];
+    url: string;
 }

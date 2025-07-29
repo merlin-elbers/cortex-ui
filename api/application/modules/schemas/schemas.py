@@ -1,6 +1,7 @@
 import datetime
 from typing import Literal, Optional, List
 from pydantic import BaseModel
+from pydantic import HttpUrl
 
 
 class GetUser(BaseModel):
@@ -107,6 +108,7 @@ class MatomoTopCountry(BaseModel):
     actionsLastWeek: int
     averageSessionLengthLastWeek: int
     bounceRateLastWeek: float
+    logo: str
 
 
 class MatomoAnalytics(BaseModel):
@@ -114,6 +116,7 @@ class MatomoAnalytics(BaseModel):
     topCountries: List[MatomoTopCountry]
     topReferrers: List[MatomoTopReferrer]
     topPages: List[MatomoTopPage]
+    url: HttpUrl
 
 
 class ServerStatusSchema(BaseModel):

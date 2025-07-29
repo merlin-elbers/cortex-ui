@@ -7,20 +7,24 @@ import {
     TrendingDown,
     CornerUpLeft,
     Activity,
-    BarChart2, MousePointerClick, Search, Globe, Share2
+    BarChart2, MousePointerClick, Search, Globe, Share2, HelpCircle
 } from 'lucide-react';
 import {useAuth} from "@/context/AuthContext";
 import {redirect} from "next/navigation";
 import React, {useEffect, useState} from "react";
 import {MatomoAnalytics} from "@/types/Matomo";
-import Loader from "@/components/Loader";
+import Image from "next/image";
+import {StatsCardsSkeleton} from "@/components/ui/stats-cards-skeleton";
+import {ListPanelsSkeleton} from "@/components/ui/list-panels-skeleton";
 
 const AdminDashboard = () => {
-    const { user, isAuthenticated, serverStatus, loading } = useAuth()
+    const { user, isAuthenticated, serverStatus } = useAuth()
     const [analytics, setAnalytics] = useState<MatomoAnalytics | null>(null)
+    const [loadAnalytics, setLoadAnalytics] = useState<boolean>(true)
 
     useEffect(() => {
         if (serverStatus.matomoConfigured) {
+            setLoadAnalytics(true);
             fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/analytics/matomo`, {
                 method: "GET",
                 headers: {
@@ -47,6 +51,7 @@ const AdminDashboard = () => {
                         setAnalytics({...json.data})
                     }
                 })
+                .then(() => setLoadAnalytics(false))
         }
     }, [serverStatus]);
 
@@ -59,7 +64,6 @@ const AdminDashboard = () => {
         return `${seconds}s`;
     }
 
-    if (loading) return <Loader />
     if (!isAuthenticated) return redirect('/login')
 
     return (
@@ -77,7 +81,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className={"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"}>
-                {analytics && analytics.summary.map((stat, index) => (
+                {analytics ? analytics.summary.map((stat, index) => (
                     <div key={`stat-${index}`} className={`${stat.trend === 'UP' ? 'bg-slate-50' : 'bg-slate-100'} border border-slate-200 rounded-lg p-6`}>
                         <div className={"flex items-center justify-between"}>
                             <div>
@@ -105,73 +109,119 @@ const AdminDashboard = () => {
                             </span>
                         </div>
                     </div>
-                ))}
+                )) : loadAnalytics ? Array.from({ length: 4 }).map((_, index) => (<StatsCardsSkeleton key={index} />)) : null}
             </div>
 
-            <div className={"grid grid-cols-1 lg:grid-cols-2 gap-6"}>
-                <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
-                    <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
-                        Trafficquellen
-                    </h2>
-                    <div className={"space-y-3"}>
-                        {analytics && analytics.topReferrers.map((referrer) => (
-                            <div key={referrer.label} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
-                                <div className={"flex items-center gap-3"}>
-                                    {referrer.icon}
-                                    <div>
-                                        <p className={"text-slate-900 text-sm font-semibold capitalize"}>
-                                            {referrer.label}
-                                        </p>
-                                        <p className={"text-gray-500 text-xs"}>
-                                            Ø Aufenthaltsdauer {formatTime(referrer.averageSessionLengthLastWeek)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className={"text-right"}>
-                                    <p className={"text-slate-900 text-sm font-bold"}>
-                                        {referrer.visitsLastWeek}
-                                    </p>
-                                    <p className={"text-gray-500 text-xs"}>
-                                        Aufrufe
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
 
-                <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
-                    <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
-                        Meistbesuchte Seiten
-                    </h2>
-                    <div className={"space-y-3"}>
-                        {analytics && analytics.topPages.map((page, index) => (
-                            <div key={page.url} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
-                                <div className={"flex items-center gap-3"}>
+            <div className={"grid grid-cols-1 lg:grid-cols-2 gap-6"}>
+                {analytics ? (
+                    <>
+                        <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
+                            <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
+                                Trafficquellen
+                            </h2>
+                            <div className={"space-y-3"}>
+                                {analytics && analytics.topReferrers.map((referrer) => (
+                                    <div key={referrer.label} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
+                                        <div className={"flex items-center gap-3"}>
+                                            {referrer.icon}
+                                            <div>
+                                                <p className={"text-slate-900 text-sm font-semibold capitalize"}>
+                                                    {referrer.label}
+                                                </p>
+                                                <p className={"text-gray-500 text-xs"}>
+                                                    Ø Aufenthaltsdauer {formatTime(referrer.averageSessionLengthLastWeek)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className={"text-right"}>
+                                            <p className={"text-slate-900 text-sm font-bold"}>
+                                                {referrer.visitsLastWeek}
+                                            </p>
+                                            <p className={"text-gray-500 text-xs"}>
+                                                Aufrufe
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
+                            <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
+                                Meistbesuchte Seiten
+                            </h2>
+                            <div className={"space-y-3"}>
+                                {analytics && analytics.topPages.map((page, index) => (
+                                    <div key={page.url} className={"flex items-center justify-between p-3 bg-slate-200 rounded-lg"}>
+                                        <div className={"flex items-center gap-3"}>
                                     <span className={"text-indigo-500 font-bold text-base"}>
                                         #{index + 1}
                                     </span>
-                                    <div>
-                                        <p className={"text-slate-900 text-sm font-semibold capitalize"}>
-                                            {page.url.replace('/', '').replaceAll('-', ' ')} <span className={"font-medium text-gray-500 lowercase"}>({page.url})</span>
-                                        </p>
-                                        <p className={"text-gray-500 text-xs"}>
-                                            Ø Ladezeit {formatTime(page.averageLoadTimeLastWeek)}
-                                        </p>
+                                            <div>
+                                                <p className={"text-slate-900 text-sm font-semibold capitalize"}>
+                                                    {page.url.replace('/', '').replaceAll('-', ' ')} <span className={"font-medium text-gray-500 lowercase"}>({page.url})</span>
+                                                </p>
+                                                <p className={"text-gray-500 text-xs"}>
+                                                    Ø Ladezeit {formatTime(page.averageLoadTimeLastWeek)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className={"text-right"}>
+                                            <p className={"text-slate-900 text-sm font-bold"}>
+                                                {page.visitsLastWeek}
+                                            </p>
+                                            <p className={"text-gray-500 text-xs"}>
+                                                Aufrufe
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className={"text-right"}>
-                                    <p className={"text-slate-900 text-sm font-bold"}>
-                                        {page.visitsLastWeek}
-                                    </p>
-                                    <p className={"text-gray-500 text-xs"}>
-                                        Aufrufe
-                                    </p>
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
+
+                        <div className={"bg-slate-100 border border-slate-200 rounded-lg p-6"}>
+                            <h2 className={"text-xl font-bold text-slate-900 mb-4"}>
+                                Zugriffe nach Land
+                            </h2>
+                            <div className={"space-y-3"}>
+                                {analytics && analytics.topCountries.map((country) => (
+                                    <div key={country.country} className={"grid grid-cols-[50px_1fr_50px] items-center p-3 bg-slate-200 rounded-lg"}>
+                                        {country.logo && country.logo !== 'xx' && country.logo !== 'unknown' ? (
+                                            <Image
+                                                src={`https://flagcdn.com/w40/${country.logo?.toLowerCase()}.png`}
+                                                alt={country.logo as string}
+                                                width={50}
+                                                height={50}
+                                                className="h-5 w-fit rounded-sm"
+                                            />
+                                        ) : (
+                                            <HelpCircle className="h-6 w-6 rounded-sm text-slate-900" />
+                                        )}
+                                        <div className={"flex items-center gap-3"}>
+                                            <div>
+                                                <p className={"text-slate-900 text-sm font-semibold capitalize"}>
+                                                    {country.country}
+                                                </p>
+                                                <p className={"text-gray-500 text-xs"}>
+                                                    Ø Aufenthaltsdauer {formatTime(country.averageSessionLengthLastWeek)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className={"text-right"}>
+                                            <p className={"text-slate-900 text-sm font-bold"}>
+                                                {country.visitsLastWeek}
+                                            </p>
+                                            <p className={"text-gray-500 text-xs"}>
+                                                Aufrufe
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                ) : loadAnalytics ?  Array.from({ length: 3 }).map((_, index) => <ListPanelsSkeleton key={index} />) : null}
             </div>
         </div>
     )

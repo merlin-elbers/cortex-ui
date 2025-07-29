@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from application.modules.analytics.matomo_client import MatomoAPIClient
 from application.modules.analytics.matomo_extractor import (extract_top_pages, extract_top_referrers,
-                                                            extract_top_countries, extract_summary)
+                                                            extract_top_countries, extract_summary,
+                                                            get_two_week_windows)
 from application.modules.auth.dependencies import get_current_user
 from application.modules.database.database_models import MatomoConfig
 from application.modules.schemas.response_schemas import (ValidationError, GeneralExceptionSchema,
@@ -65,6 +66,7 @@ async def get_matomo_analytics(
         site_id=matomo_data.matomoSiteId,
         encrypted_token=matomo_data.matomoApiKey
     )
+    date_ranges = get_two_week_windows()
 
     return MatomoAnalyticsResponse(
         isOk=True,
@@ -72,8 +74,9 @@ async def get_matomo_analytics(
         message="Daten von Matomo erfolgreich analysiert",
         data=MatomoAnalytics(
             summary=extract_summary(matomo_client),
-            topCountries=extract_top_countries(matomo_client.get_countries(period="week", date="last1")),
-            topReferrers=extract_top_referrers(matomo_client.get_top_referrers(period="week", date="last1")),
-            topPages=extract_top_pages(matomo_client.get_top_pages(period="week", date="last1"))
+            topCountries=extract_top_countries(matomo_client.get_countries(period="range", date=date_ranges[0])),
+            topReferrers=extract_top_referrers(matomo_client.get_top_referrers(period="range", date=date_ranges[0])),
+            topPages=extract_top_pages(matomo_client.get_top_pages(period="range", date=date_ranges[0])),
+            url=matomo_client.base_url
         )
     )

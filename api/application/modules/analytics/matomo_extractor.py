@@ -99,9 +99,14 @@ def extract_top_pages(data: Dict[str, List[Dict[str, any]]], limit: int = 5) -> 
     if not data:
         return []
 
+    try:
+        data = data.get(next(iter(data)), [])
+    except AttributeError:
+        pass
+
     top_pages: List[MatomoTopPage] = []
 
-    for page in sorted(data.get(next(iter(data)), []), key=lambda p: p.get("nb_visits", 0), reverse=True)[:limit]:
+    for page in sorted(data, key=lambda p: p.get("nb_visits", 0), reverse=True)[:limit]:
         top_pages.append(MatomoTopPage(
             url=page.get("label", "unknown"),
             visitsLastWeek=page.get("nb_visits", 0),
@@ -124,9 +129,14 @@ def extract_top_referrers(data: Dict[str, List[Dict[str, any]]], limit: int = 5)
     if not data:
         return []
 
+    try:
+        data = data.get(next(iter(data)), [])
+    except AttributeError:
+        pass
+
     top_referrers: List[MatomoTopReferrer] = []
 
-    for ref in sorted(data.get(next(iter(data)), []), key=lambda r: r.get("nb_visits", 0), reverse=True)[:limit]:
+    for ref in sorted(data, key=lambda r: r.get("nb_visits", 0), reverse=True)[:limit]:
 
         top_referrers.append(MatomoTopReferrer(
             label=ref.get('label', 'unknown'),
@@ -152,9 +162,13 @@ def extract_top_countries(data: Dict[str, List[Dict[str, any]]], limit: int = 5)
     if not data:
         return []
 
-    top_countries: List[MatomoTopCountry] = []
+    try:
+        data = data.get(next(iter(data)), [])
+    except AttributeError:
+        pass
 
-    for country in sorted(data.get(next(iter(data)), []), key=lambda c: c.get("nb_visits", 0), reverse=True)[:limit]:
+    top_countries: List[MatomoTopCountry] = []
+    for country in sorted(data, key=lambda c: c.get("nb_visits", 0), reverse=True)[:limit]:
         top_countries.append(MatomoTopCountry(
             country=country.get("label", "Unknown"),
             visitsLastWeek=country.get("nb_visits", 0),
@@ -162,7 +176,8 @@ def extract_top_countries(data: Dict[str, List[Dict[str, any]]], limit: int = 5)
             averageSessionLengthLastWeek=round(
                 country.get("sum_visit_length", 0) / country.get("nb_visits", 0)
             ) if country.get("nb_visits", 0) > 0 else 0,
-            bounceRateLastWeek=parse_bounce_rate(country.get("bounce_count", 0), country.get("nb_visits", 0))
+            bounceRateLastWeek=parse_bounce_rate(country.get("bounce_count", 0), country.get("nb_visits", 0)),
+            logo= country.get("code", "unknown")
         ))
 
     return top_countries
