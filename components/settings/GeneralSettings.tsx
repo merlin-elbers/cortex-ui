@@ -13,6 +13,7 @@ import {Checkbox} from "@/components/ui/checkbox";
 import Bus from "@/lib/bus";
 import FileUpload from "@/components/FileUpload";
 import {cleanObject} from "@/lib/cleanObject";
+import {fetchWithAuth} from "@/lib/fetchWithAuth";
 
 function normalizeWhiteLabel(config?: Partial<WhiteLabelConfig>): WhiteLabelConfig {
     return {
@@ -48,12 +49,8 @@ export default function GeneralSettings() {
     const handleSubmit = async() => {
         const cleaned = cleanObject<WhiteLabelConfig>(newWhiteLabelConfig)
 
-        fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/white-label`, {
+        fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/settings/white-label`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
             body: JSON.stringify(cleaned)
         })
             .then(res => res.json())
@@ -66,7 +63,11 @@ export default function GeneralSettings() {
                     })
                     refreshWhiteLabelConfig()
                     setFileReset(true)
-                }
+                } else Bus.emit('notification', {
+                    title: 'Konfiguration nicht gespeichert',
+                    message: 'Ihre WhiteLabel Konfiguration konnte nicht vom Server verarbeitet werden',
+                    categoryName: 'warning'
+                })
             })
     }
 
@@ -74,7 +75,7 @@ export default function GeneralSettings() {
         <div className={"lg:col-span-3 bg-slate-50 border border-gray-200 rounded-lg p-6"}>
             <div className={"space-y-6"}>
                 <h2 className={"text-xl font-bold text-slate-900"}>
-                    Allgemeine Einstellungen
+                    Allgemein
                 </h2>
 
                 <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>

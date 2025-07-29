@@ -54,4 +54,4 @@ __pycache__/
 # api files
 
 api/logs/
-api/token/
+api/tokens/

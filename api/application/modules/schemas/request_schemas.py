@@ -100,6 +100,3 @@ class M365TokenRequest(BaseModel):
     tenantId: str
     code: str
     redirect_uri: str
-
-
-

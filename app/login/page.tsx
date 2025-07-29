@@ -1,5 +1,6 @@
 import {Metadata} from "next";
 import LoginForm from "@/app/login/LoginForm";
+import {Suspense} from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
     return {
@@ -38,5 +39,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Page() {
-    return <LoginForm />
+    return (
+        <Suspense>
+            <LoginForm />
+        </Suspense>
+    )
 }

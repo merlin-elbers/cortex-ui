@@ -25,8 +25,8 @@ class SetupGuardMiddleware(BaseHTTPMiddleware):
             ("GET", re.compile(rf"^{settings.API_PREFIX}/setup/status/?$")),
             ("POST", re.compile(rf"^{settings.API_PREFIX}/setup/complete?$")),
             ("OPTIONS", re.compile(rf"^{settings.API_PREFIX}/setup/complete?$")),
-            ("POST", re.compile(rf"^{settings.API_PREFIX}/system/token/?$")),
-            ("OPTIONS", re.compile(rf"^{settings.API_PREFIX}/system/token/?$")),
+            ("POST", re.compile(rf"^{settings.API_PREFIX}/settings/m365/?$")),
+            ("OPTIONS", re.compile(rf"^{settings.API_PREFIX}/settings/m365/?$")),
         ]
 
         for method, path_regex in allowed_paths:

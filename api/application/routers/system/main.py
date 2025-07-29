@@ -10,7 +10,7 @@ from application.modules.auth.dependencies import require_role
 from application.modules.schemas.response_schemas import (ValidationError, GeneralException, DbHealthResponse,
                                                           BaseResponse, GeneralExceptionSchema, PingResponse, StatusResponse)
 from application.modules.database.database_models import UserRole, SMTPServer, Microsoft365, MatomoConfig
-from application.modules.schemas.schemas import ServerStatusSchema
+from application.modules.schemas.schemas import ServerStatusSchema, DatabaseHealthSchema
 from application.modules.utils.settings import get_settings
 
 router = APIRouter()
@@ -194,13 +194,15 @@ async def mongodb_health(
                 isOk=True,
                 status="DB_HEALTH_OK",
                 message="Verbindungsstatus zur MongoDB OK",
-                dbName=settings.MONGODB_DB_NAME,
-                serverVersion=server_status["version"],
-                uptimeSeconds=server_status["uptime"],
-                connectionCount=server_status["connections"]["current"],
-                latencyMs=round(duration, 2),
-                indexes=db_stats["indexes"],
-                storageSizeMB=round(db_stats["storageSize"] / 1024 / 1024, 2)
+                data=DatabaseHealthSchema(
+                    dbName=settings.MONGODB_DB_NAME,
+                    serverVersion=server_status["version"],
+                    uptimeSeconds=server_status["uptime"],
+                    connectionCount=server_status["connections"]["current"],
+                    latencyMs=round(duration, 2),
+                    indexes=db_stats["indexes"],
+                    storageSizeMB=round(db_stats["storageSize"] / 1024 / 1024, 2)
+                )
             )
         raise Exception("Ping fehlgeschlagen")
 

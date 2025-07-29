@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import {FileText, Rocket} from 'lucide-react';
 import {SetupData} from "@/types/SetupData";
 import FileUpload from "@/components/FileUpload";
+import {SetupDataZod} from "@/types/SetupDataZod";
+import Bus from "@/lib/bus";
 
 interface FileUploadStepProps {
     onNext: () => void;
@@ -34,9 +36,27 @@ export const FileUploadStep: FC<FileUploadStepProps> = ({ onNext, updateData, on
 
             <FileUpload
                 isValidFunction={async (file: File) => {
-                    const json = await file.text()
-                    updateData(JSON.parse(json))
-                    setConfigLoaded(true)
+                    try {
+                        const json = await file.text()
+                        const parsed = JSON.parse(json)
+                        const result = SetupDataZod.safeParse(parsed)
+                        if (!result) {
+                            Bus.emit('notification', {
+                                title: 'Konfiguration konnte nicht gelesen werden',
+                                message: 'Bitte prüfen Sie ihre Konfigurationsdatei oder nutzen ggf. die Beispieldatei von GitHub',
+                                categoryName: 'warning'
+                            })
+                            return
+                        }
+                        updateData(result.data as SetupData)
+                        setConfigLoaded(true)
+                    } catch (error) {
+                        Bus.emit('notification', {
+                            title: 'Konfiguration konnte nicht gelesen werden',
+                            message: `Folgender Fehler ist aufgetreten: ${error}`,
+                            categoryName: 'warning'
+                        })
+                    }
                 }}
                 allowedExtensions={['.json']}
                 maxFileSize={2}

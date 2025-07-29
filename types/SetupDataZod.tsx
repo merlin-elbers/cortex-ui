@@ -19,53 +19,58 @@ export const SetupDataZod = z.object({
     branding: z.object({
         logo: z
             .object({
-                contentType: z.string().optional(),
-                name: z.string().optional(),
-                data: z.string().optional(),
-                lastModified: z.union([z.string(), z.date(), z.number()]).nullable().optional(),
+                contentType: z.string().nullable().optional(),
+                name: z.string().nullable().optional(),
+                data: z.string().nullable().optional(),
+                lastModified: z.union([z.string(), z.number()]).nullable().optional(),
             })
+            .nullable()
             .optional(),
         title: z.string(),
         showTitle: z.boolean().default(false),
-        subtitle: z.string().optional(),
-        description: z.string().optional(),
-        contactEmail: z.string().optional(),
-        contactPhone: z.string().optional(),
-        contactFax: z.string().optional(),
+        subtitle: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        contactMail: z.string().nullable().optional(),
+        contactPhone: z.string().nullable().optional(),
+        contactFax: z.string().nullable().optional(),
     }),
     mailServer: z.object({
         type: z.enum(["smtp", "microsoft365"]),
         smtp: z
             .object({
-                host: z.string().optional(),
-                port: z.number().optional(),
-                username: z.string().optional(),
-                password: z.string().optional(),
-                senderName: z.string().optional(),
-                senderEmail: z.string().optional(),
-                tested: z.boolean().optional(),
+                host: z.string().nullable().optional(),
+                port: z.number().nullable().optional(),
+                username: z.string().nullable().optional(),
+                password: z.string().nullable().optional(),
+                senderName: z.string().nullable().optional(),
+                senderEmail: z.string().nullable().optional(),
+                tested: z.boolean().nullable().optional(),
             })
+            .nullable()
             .optional(),
         microsoft365: z
             .object({
-                tenantId: z.string().optional(),
-                clientId: z.string().optional(),
-                secretKey: z.string().optional(),
-                authenticated: z.boolean().optional(),
-                senderName: z.string().optional(),
-                senderEmail: z.string().optional(),
+                tenantId: z.string().nullable().optional(),
+                clientId: z.string().nullable().optional(),
+                secretKey: z.string().nullable().optional(),
+                authenticated: z.boolean().nullable().optional(),
+                senderName: z.string().nullable().optional(),
+                senderEmail: z.string().nullable().optional(),
             })
+            .nullable()
             .optional(),
     }),
     analytics: z.object({
-        matomoUrl: z.string().optional(),
-        matomoSiteId: z.string().optional(),
-        matomoApiKey: z.string().optional(),
-        connectionTested: z.boolean().optional(),
+        matomoUrl: z.string().nullable().optional(),
+        matomoSiteId: z.string().nullable().optional(),
+        matomoApiKey: z.string().nullable().optional(),
+        connectionTested: z.boolean().nullable().optional(),
     }),
     license: z.object({
         accepted: z.boolean(),
     }),
+    generatedAt: z.string().optional(),
+    version: z.string().optional(),
 });
 
 export type SetupDataZod = z.infer<typeof SetupDataZod>;

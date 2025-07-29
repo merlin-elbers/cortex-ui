@@ -24,6 +24,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {UserPublic} from "@/types/User";
+import {fetchWithAuth} from "@/lib/fetchWithAuth";
+import {redirect} from "next/navigation";
 
 function capitalize(val: string) {
     return String(val).charAt(0).toUpperCase() + String(val).slice(1);
@@ -43,7 +45,7 @@ const emptyUser = {
 }
 
 const AdminUsers = () => {
-    const { user } = useAuth()
+    const { user, loading, isAuthenticated } = useAuth()
     const [searchTerm, setSearchTerm] = useState('')
     const [todaysLogins, setTodaysLogins] = useState<number>(0)
     const [activeUsers, setActiveUsers] = useState<number>(0)
@@ -57,12 +59,8 @@ const AdminUsers = () => {
     useEffect(() => {
         if (reload) {
             setReload(false)
-            fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/users`, {
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/users`, {
                 method: 'GET',
-                headers: {
-                    ContentType: 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                }
             })
                 .then(res => res.json())
                 .then(json => {
@@ -83,12 +81,8 @@ const AdminUsers = () => {
     )
 
     function handleEditUser() {
-        fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
+        fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
             method: 'PUT',
-            headers: {
-                ContentType: 'application/json',
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
             body: JSON.stringify(editingUser)
         })
             .then(res => res.json())
@@ -101,12 +95,8 @@ const AdminUsers = () => {
             })
     }
     function handleNewUser() {
-        fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
+        fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
             method: 'POST',
-            headers: {
-                ContentType: 'application/json',
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
             body: JSON.stringify(newUser)
         })
             .then(res => res.json())
@@ -118,6 +108,9 @@ const AdminUsers = () => {
                 }
             })
     }
+
+    if (loading) return null;
+    if (!isAuthenticated) return redirect('/login');
 
     return (
         <div className={"p-6 space-y-6"}>
@@ -236,12 +229,8 @@ const AdminUsers = () => {
                                             <button
                                                 className={"bg-red-500/20 text-red-400 p-2 rounded-lg hover:bg-red-500/30 transition-colors"}
                                                 onClick={() => {
-                                                    fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
+                                                    fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/admin/users`, {
                                                         method: 'DELETE',
-                                                        headers: {
-                                                            ContentType: 'application/json',
-                                                            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                                                        },
                                                         body: JSON.stringify({uid: dbUser.uid}),
                                                     })
                                                         .then(res => {

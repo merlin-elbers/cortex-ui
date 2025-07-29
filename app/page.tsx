@@ -16,20 +16,18 @@ import {MatomoAnalytics} from "@/types/Matomo";
 import Image from "next/image";
 import {StatsCardsSkeleton} from "@/components/ui/stats-cards-skeleton";
 import {ListPanelsSkeleton} from "@/components/ui/list-panels-skeleton";
+import {fetchWithAuth} from "@/lib/fetchWithAuth";
 
 const AdminDashboard = () => {
-    const { user, isAuthenticated, serverStatus } = useAuth()
+    const { user, isAuthenticated, serverStatus, loading } = useAuth()
     const [analytics, setAnalytics] = useState<MatomoAnalytics | null>(null)
     const [loadAnalytics, setLoadAnalytics] = useState<boolean>(true)
 
     useEffect(() => {
         if (serverStatus.matomoConfigured) {
             setLoadAnalytics(true);
-            fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/analytics/matomo`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                }
+            fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/analytics/matomo`, {
+                method: "GET"
             })
                 .then(res => res.json())
                 .then(json => {
@@ -64,7 +62,8 @@ const AdminDashboard = () => {
         return `${seconds}s`;
     }
 
-    if (!isAuthenticated) return redirect('/login')
+    if (loading) return null;
+    if (!isAuthenticated) return redirect('/login');
 
     return (
         <div className={"p-6 space-y-6"}>
@@ -89,7 +88,7 @@ const AdminDashboard = () => {
                                     {stat.label}
                                 </p>
                                 <p className={"text-2xl font-bold text-indigo-500"}>
-                                    {stat.number}
+                                    {stat.label.toLowerCase().includes('zeit') ? formatTime(stat.number) : stat.number}
                                 </p>
                             </div>
                             {stat.icon}

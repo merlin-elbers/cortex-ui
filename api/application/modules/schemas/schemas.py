@@ -125,3 +125,13 @@ class ServerStatusSchema(BaseModel):
     smtpServerConfigured: bool
     m365Configured: bool
     matomoConfigured: bool
+
+
+class DatabaseHealthSchema(BaseModel):
+    dbName: str
+    serverVersion: str
+    uptimeSeconds: float | int
+    connectionCount: int
+    indexes: int | str
+    storageSizeMB: float
+    latencyMs: float

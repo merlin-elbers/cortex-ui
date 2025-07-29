@@ -2,7 +2,7 @@
 
 import React, {useEffect, useState} from 'react';
 import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react';
-import {redirect} from "next/navigation";
+import {redirect, useSearchParams} from "next/navigation";
 import Link from "next/link";
 import {useAuth} from "@/context/AuthContext";
 import Image from "next/image";
@@ -20,6 +20,7 @@ const LoginForm = () => {
 
     const { isOnline, errorMessage, lastChecked } = usePing();
     const { isAuthenticated, loading, login, setupCompleted, whiteLabelConfig } = useAuth()
+    const searchParams = useSearchParams()
 
     useEffect(() => {
         if (isOnline === false && lastChecked < new Date()) {
@@ -30,6 +31,16 @@ const LoginForm = () => {
             });
         }
     }, [errorMessage, isOnline, lastChecked]);
+
+    useEffect(() => {
+        if (searchParams.has('session_expired')) {
+            Bus.emit("notification", {
+                title: "Sitzung abgelaufen",
+                message: "Ihre Sitzung ist abgelaufen, bitte erneut anmelden.",
+                categoryName: "warning"
+            })
+        }
+    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()

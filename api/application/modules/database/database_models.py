@@ -82,10 +82,10 @@ class Logins(Document):
 
 class Microsoft365(Document):
     uid: Indexed(str, unique=True)
-    email: str
-    displayName: str
+    senderEmail: str
+    senderName: str
     clientId: str
-    clientSecret: str
+    secretKey: str
     tenantId: str
     createdAt: datetime.datetime = Field(default_factory=datetime.datetime.now)
 

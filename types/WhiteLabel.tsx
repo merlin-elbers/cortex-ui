@@ -15,13 +15,3 @@ export interface WhiteLabelConfig {
     contactPhone?: string;
     contactFax?: string;
 }
-
-export const normalizeWhiteLabelConfig = (config: Partial<WhiteLabelConfig>): WhiteLabelConfig => ({
-    title: config.title ?? '',
-    showTitle: config.showTitle ?? false,
-    subtitle: config.subtitle ?? '',
-    description: config.description ?? '',
-    contactMail: config.contactMail ?? '',
-    contactPhone: config.contactPhone ?? '',
-    contactFax: config.contactFax ?? '',
-});

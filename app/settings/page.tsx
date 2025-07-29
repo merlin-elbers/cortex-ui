@@ -1,25 +1,31 @@
 'use client'
 
 import React, { useState } from 'react';
-import {Globe, Mail, Database, BarChart3, Archive} from 'lucide-react';
+import {Globe, Mail, Database, BarChart3, Archive, KeyRound} from 'lucide-react';
 import {Button} from "@/components/ui/button";
 import GeneralSettings from "@/components/settings/GeneralSettings";
 import {SettingTabs} from "@/types/Settings";
 import {useAuth} from "@/context/AuthContext";
 import {redirect} from "next/navigation";
+import MailSettings from "@/components/settings/MailSettings";
+import DatabaseSettings from "@/components/settings/DatabaseSettings";
+import AnalyticsSettings from "@/components/settings/AnalyticsSettings";
+import BackupSettings from "@/components/settings/BackupSettings";
 
 const AdminSettings = () => {
-    const { isAuthenticated } = useAuth();
+    const { loading, isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('general');
 
     const tabs: SettingTabs[] = [
         { id: 'general', label: 'Allgemein', icon: Globe, component: GeneralSettings },
-        { id: 'email', label: 'E-Mail', icon: Mail, component: GeneralSettings },
-        { id: 'database', label: 'Datenbank', icon: Database, component: GeneralSettings },
-        { id: 'analytics', label: 'Analytics', icon: BarChart3, component: GeneralSettings },
-        { id: 'backup', label: 'Backup', icon: Archive, component: GeneralSettings },
+        { id: 'publicKeys', label: 'Öffentliche Keys', icon: KeyRound, component: GeneralSettings },
+        { id: 'email', label: 'E-Mail', icon: Mail, component: MailSettings },
+        { id: 'database', label: 'Datenbank', icon: Database, component: DatabaseSettings },
+        { id: 'analytics', label: 'Analytics', icon: BarChart3, component: AnalyticsSettings },
+        { id: 'backup', label: 'Backup', icon: Archive, component: BackupSettings },
     ]
 
+    if (loading) return null;
     if (!isAuthenticated) return redirect('/login');
 
     return isAuthenticated && (
@@ -36,7 +42,7 @@ const AdminSettings = () => {
             </div>
 
             <div className={"grid grid-cols-1 lg:grid-cols-4 gap-6"}>
-                <div className={"bg-slate-50 border border-slate-200 rounded-lg p-4"}>
+                <div className={"bg-slate-50 border border-slate-200 rounded-lg p-4 self-start"}>
                     <nav className={"space-y-2"}>
                         {tabs.map((tab) => (
                             <Button

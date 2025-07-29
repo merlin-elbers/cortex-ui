@@ -69,10 +69,22 @@ export default function SetupWizard() {
     });
 
     const updateStepData = (stepKey: keyof SetupData, data: object) => {
-        setSetupData(prev => ({
-            ...prev,
-            [stepKey]: { ...prev[stepKey], ...data }
-        }));
+        setSetupData(prev => {
+            const current = prev[stepKey];
+
+            if (typeof current !== "object" || current === null) {
+                console.warn(`Schlüssel ${stepKey.toString()} ist kein Objekt.`);
+                return prev;
+            }
+
+            return {
+                ...prev,
+                [stepKey]: {
+                    ...current,
+                    ...data,
+                },
+            };
+        });
     };
 
     const canProceed = () => {
@@ -146,16 +158,13 @@ export default function SetupWizard() {
             if (json.isOk) {
                 Bus.emit('notification', {
                     title: "Konfiguration erfolgreich übertragen",
-                    message: "Sie werden in 3 Sekunden automatisch zum Login weitergeleitet",
+                    message: "Sie werden automatisch zum Login weitergeleitet",
                     categoryName: "success"
                 })
                 refreshSetupCompleted()
                 refreshSystemStatus()
                 refreshWhiteLabelConfig()
                 setIsSuccessful(true)
-                setTimeout(() => {
-                    redirect('/login')
-                }, 3000)
             } else Bus.emit('notification', {
                 title: "Fehler beim Übertragen der Konfiguration",
                 message: "Überprüfen Sie die Logs des Servers oder probieren Sie es erneut",

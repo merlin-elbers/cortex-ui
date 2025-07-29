@@ -1,9 +1,8 @@
 from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
-
-from application.modules.schemas.request_schemas import BrandingLogo, Branding, MailServer
-from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema
+from application.modules.schemas.request_schemas import Branding, MailServer, DatabaseConfig, Analytics
+from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema, DatabaseHealthSchema
 
 
 # region Response Schemas
@@ -103,13 +102,8 @@ class PingResponse(BaseResponse):
     latencyMs: float
 
 
-class DbHealthResponse(PingResponse):
-    dbName: str
-    serverVersion: str
-    uptimeSeconds: float | int
-    connectionCount: int
-    indexes: int | str
-    storageSizeMB: float
+class DbHealthResponse(BaseResponse):
+    data: DatabaseHealthSchema
 
 
 class BackupResponse(BaseResponse):
@@ -139,5 +133,13 @@ class MatomoAnalyticsResponse(BaseResponse):
 
 class MailServerResponse(BaseResponse):
     data: MailServer
+
+
+class DatabaseResponse(BaseResponse):
+    data: DatabaseConfig
+
+
+class AnalyticsResponse(BaseResponse):
+    data: Analytics
 
 # endregion
