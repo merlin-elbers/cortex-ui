@@ -41,6 +41,7 @@ class Branding(BaseModel):
     logo: Optional[BrandingLogo] = None
     title: str
     showTitle: bool = False
+    externalUrl: HttpUrl
     subtitle: Optional[str] = None
     description: Optional[str] = None
     contactMail: Optional[EmailStr] = None
@@ -100,3 +101,7 @@ class M365TokenRequest(BaseModel):
     tenantId: str
     code: str
     redirect_uri: str
+
+
+class VerifyRequest(BaseModel):
+    code: str

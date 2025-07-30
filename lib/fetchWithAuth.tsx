@@ -1,7 +1,5 @@
 'use client'
 
-import Bus from "@/lib/bus";
-
 export async function fetchWithAuth(
     input: RequestInfo,
     init: RequestInit = {}

@@ -18,10 +18,13 @@ class Settings(BaseSettings):
     MONGODB_DB_NAME: str
     VERSION: str
     API_PREFIX: str
+    EMAIL_VERIFICATION: bool
     SETUP_COMPLETED: bool
+    EXTERNAL_URL: str
 
     class Config:
         env_file = ".env"
+
 
 def get_settings():
     values = dotenv_values(Path(".env"))

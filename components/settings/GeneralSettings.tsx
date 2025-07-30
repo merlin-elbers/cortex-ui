@@ -19,6 +19,7 @@ function normalizeWhiteLabel(config?: Partial<WhiteLabelConfig>): WhiteLabelConf
     return {
         title: config?.title ?? '',
         showTitle: config?.showTitle ?? false,
+        externalUrl: config?.externalUrl ?? 'https://github.com/merlin-elbers/cortex-ui',
         subtitle: config?.subtitle ?? '',
         description: config?.description ?? '',
         contactMail: config?.contactMail ?? '',
@@ -81,7 +82,7 @@ export default function GeneralSettings() {
                 <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>
                     <div className={"space-y-2"}>
                         <Label htmlFor={"projectTitle"}>
-                            Titel <span className={"text-red-500"}>*</span>
+                            Projekt-/Kundenname <span className={"text-red-500"}>*</span>
                         </Label>
                         <Input
                             id={"projectTitle"}
@@ -103,6 +104,19 @@ export default function GeneralSettings() {
                     </div>
                 </div>
 
+                <div className={"space-y-2"}>
+                    <Label htmlFor={"projectExternalUrl"}>
+                        Externe URL <span className={"text-red-500"}>*</span>
+                    </Label>
+                    <Input
+                        id={"projectExternalUrl"}
+                        type={"url"}
+                        placeholder={"https://github.com/merlin-elbers/cortex-ui"}
+                        value={newWhiteLabelConfig.externalUrl}
+                        onChange={(e) => setNewWhiteLabelConfig({...newWhiteLabelConfig, externalUrl: e.target.value})}
+                    />
+                </div>
+
                 <div className={"flex items-start space-x-3"}>
                     <Checkbox
                         id={"projectShowTitle"}
@@ -112,7 +126,7 @@ export default function GeneralSettings() {
                     />
                     <div className={"space-y-2"}>
                         <Label htmlFor={"projectShowTitle"} className={"font-medium"}>
-                            Titel anzeigen <span className={"text-red-500"}>*</span>
+                            Projekt-/Kundenname anzeigen <span className={"text-red-500"}>*</span>
                         </Label>
                         <p className={"text-xs text-gray-500"}>
                             Wenn aktiviert, wird der Titel, im Adminpanel in bestimmten Komponenten, mitgerendert

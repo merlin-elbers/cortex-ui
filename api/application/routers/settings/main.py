@@ -136,6 +136,7 @@ async def post_m365(data: M365TokenRequest):
 )
 async def get_white_label():
     white_label_config = await WhiteLabelConfig.find_one()
+    settings = get_settings()
     if not white_label_config:
         raise GeneralException(
             is_ok=False,
@@ -148,6 +149,7 @@ async def get_white_label():
         status="OK",
         message=f"WhiteLabelConfig wurde gefunden",
         data=Branding(
+            externalUrl=settings.EXTERNAL_URL,
             **white_label_config.__dict__
         )
     )
@@ -185,7 +187,7 @@ async def get_white_label():
 )
 async def put_white_label(
         data: Branding,
-        _user = Depends(require_role('admin'))
+        _user=Depends(require_role('admin'))
 ):
     white_label_config = await WhiteLabelConfig.find_one()
     if not white_label_config:
@@ -195,6 +197,12 @@ async def put_white_label(
             exception="WhiteLabelConfig wurde nicht gefunden",
             status_code=500
         )
+
+    setup_env(
+        external_url=data.externalUrl,
+    )
+
+    del data.externalUrl
 
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(white_label_config, field, value)
@@ -206,6 +214,7 @@ async def put_white_label(
         status="OK",
         message="WhiteLabelConfig wurde aktualisiert",
     )
+
 
 # endregion
 
@@ -254,7 +263,7 @@ async def put_white_label(
     }
 )
 async def get_mail(
-        _user = Depends(require_role('admin'))
+        _user=Depends(require_role('admin'))
 ):
     mail_settings = await Microsoft365.find_one() if await Microsoft365.find_one() else await SMTPServer.find_one()
     if not mail_settings:
@@ -264,7 +273,7 @@ async def get_mail(
             status_code=400,
             exception="SMTP Server / Microsoft 365 Konfiguration wurde nicht gefunden",
         )
-    if type(mail_settings) == Microsoft365:
+    if type(mail_settings) is Microsoft365:
         mail_type = 'microsoft365'
         del mail_settings.secretKey
         data = M365Settings(
@@ -526,6 +535,7 @@ async def post_database(
         status="OK",
         message="Datenbank-Einstellungen aktualisiert",
     )
+
 
 # endregion
 

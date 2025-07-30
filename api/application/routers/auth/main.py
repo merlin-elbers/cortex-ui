@@ -1,4 +1,6 @@
 import datetime
+import secrets
+
 from starlette.requests import Request
 from uuid6 import uuid7
 from fastapi import APIRouter, Depends
@@ -8,7 +10,10 @@ from application.modules.auth.dependencies import get_current_user
 from application.modules.auth.login_logger import log_login_attempt
 from application.modules.auth.security import create_access_token, hash_password
 from application.modules.auth.service import verify_password
-from application.modules.database.database_models import User, LoginStatus
+from application.modules.database.database_models import User, LoginStatus, EmailVerification, Microsoft365, SMTPServer, \
+    WhiteLabelConfig
+from application.modules.mail.mailer import send_html_email
+from application.modules.schemas.request_schemas import VerifyRequest
 from application.modules.schemas.response_schemas import AuthResponse, ValidationError, GeneralException, BaseResponse, \
     GeneralExceptionSchema
 from application.modules.schemas.schemas import GetUser, CreateUserSelf
@@ -100,13 +105,22 @@ async def post_login(
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
     user = await User.find_one(User.email == form_data.username)
-    if not user or (user and not verify_password(form_data.password, user.password)) or (user and not user.isActive):
+    if not user or (user and not verify_password(form_data.password, user.password)):
         if user and not verify_password(form_data.password, user.password):
             await log_login_attempt(request, user.uid, LoginStatus.failed)
         raise GeneralException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             status="UNAUTHORIZED",
-            exception="User not found, inactive or incorrect password",
+            exception="Benutzer nicht gefunden oder das Passwort ist falsch",
+            is_ok=False
+        )
+    if user and not user.isActive:
+        if user and not verify_password(form_data.password, user.password):
+            await log_login_attempt(request, user.uid, LoginStatus.failed)
+        raise GeneralException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            status="UNAUTHORIZED",
+            exception="Benutzer ist nicht aktiv, bitte prüfen Sie ihr E-Mail Postfach",
             is_ok=False
         )
     await log_login_attempt(request, user.uid, LoginStatus.success)
@@ -167,7 +181,7 @@ async def post_signup(
         raise GeneralException(
             status_code=status.HTTP_403_FORBIDDEN,
             status="FORBIDDEN",
-            exception="Self signup is disabled, please contact an administrator.",
+            exception="Die öffentliche Registrierung ist deaktiviert, bitte kontaktieren Sie einen Administrator.",
             is_ok=False
         )
 
@@ -176,7 +190,7 @@ async def post_signup(
         raise GeneralException(
             status_code=status.HTTP_400_BAD_REQUEST,
             status="BAD REQUEST",
-            exception="User with given email already exists",
+            exception="Ein Benutzer mit dieser E-Mail existiert bereits.",
             is_ok=False
         )
 
@@ -196,8 +210,108 @@ async def post_signup(
     )
     await new_user.create()
 
+    if settings.EMAIL_VERIFICATION:
+        mail_settings = await Microsoft365.find_one() if await Microsoft365.find_one() else await SMTPServer.find_one()
+        white_label_config = await WhiteLabelConfig.find_one()
+        verification_code = secrets.token_urlsafe(32)
+
+        new_verification = EmailVerification(
+            email=new_user.email,
+            token=verification_code,
+            userUid=uid
+        )
+
+        await new_verification.create()
+
+        await send_html_email(
+            to_email=new_user.email,
+            subject=f"{white_label_config.title if white_label_config else "CortexUI"} | E-Mail Verifizierung",
+            template_name="mail_verification.html",
+            context={
+                "firstName": new_user.firstName,
+                "lastName": new_user.lastName,
+                "company": white_label_config.title if white_label_config else "CortexUI",
+                "code": verification_code,
+                "link": f"{settings.EXTERNAL_URL}/verify?code={verification_code}"
+            },
+            mode="smtp" if type(mail_settings) is SMTPServer else "m365"
+        )
+
     return BaseResponse(
         isOk=True,
         status="OK",
         message="Benutzer erfolgreich erstellt"
+    )
+
+
+@router.post(
+    "/verify",
+    status_code=200,
+    tags=["🔐 Authentifizierung"],
+    name="E-Mail-Adresse verifizieren",
+    description="""
+    Verifiziert eine E-Mail-Adresse anhand eines gültigen Verifizierungscodes,  
+    der zuvor per E-Mail an den Benutzer gesendet wurde.  
+
+    Der Code wird mit der Datenbank abgeglichen, überprüft auf Gültigkeit und Ablaufzeit  
+    und markiert das zugehörige Konto bei Erfolg als verifiziert.
+
+    💡 Hinweise:
+    - Der Code ist **eine Stunde lang gültig**
+    - Der Code kann entweder über einen Verifizierungs-Link oder manuell übergeben werden
+    - Bei Erfolg wird eine Bestätigung im JSON-Format zurückgegeben
+
+    🔒 Nach erfolgreicher Verifizierung kann sich der Benutzer einloggen.
+    """,
+    response_description="Verifizierung erfolgreich oder fehlgeschlagen",
+    responses={
+        200: {
+            'model': BaseResponse,
+            'description': 'E-Mail erfolgreich verifiziert'
+        },
+        400: {
+            'model': GeneralExceptionSchema,
+            'description': 'Verifizierungscode ungültig oder abgelaufen'
+        },
+        422: {
+            'model': ValidationError,
+            'description': 'Validierungsfehler in der Anfrage'
+        },
+        500: {
+            'model': GeneralExceptionSchema,
+            'description': 'Interner Serverfehler während der Verifizierung'
+        }
+    }
+)
+async def post_verify(
+        data: VerifyRequest
+):
+    token = await EmailVerification.find_one(EmailVerification.token == data.code)
+    if not token or token.is_expired():
+        raise GeneralException(
+            is_ok=False,
+            exception="Code wurde nicht gefunden oder ist nicht mehr gültig",
+            status="TOKEN_ERROR",
+            status_code=400
+        )
+
+    user = await User.find_one(User.uid == token.userUid)
+    if not user:
+        raise GeneralException(
+            is_ok=False,
+            exception="Der Benutzer zu diesem Code wurde nicht gefunden",
+            status="USER_ERROR",
+            status_code=400
+        )
+
+    user.isActive = True
+    await user.save()
+
+    token.isVerified = True
+    await token.save()
+
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message="E-Mail erfolgreich verifiziert"
     )

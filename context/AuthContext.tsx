@@ -16,6 +16,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
     const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>({
         title: 'Cortex UI',
         showTitle: false,
+        externalUrl: "https://github.com/merlin-elbers/cortex-ui"
     });
     const [serverStatus, setServerStatus] = useState<ServerStatus>({
         databaseOnline: false,
@@ -34,6 +35,7 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
                 logo: json.data.logo !== null ? json.data.logo : undefined,
                 title: json.data.title ?? '',
                 showTitle: json.data.showTitle,
+                externalUrl: json.data.externalUrl ?? 'https://github.com/merlin-elbers/cortex-ui',
                 subtitle: json.data.subtitle ?? '',
                 description: json.data.description ?? '',
                 contactMail: json.data.contactMail ?? '',
@@ -90,16 +92,17 @@ export const AuthProvider = ({children}: { children: React.ReactNode }) => {
                 body: urlencoded,
             });
 
+            const json = await res.json();
+
             if (res.status !== 200) {
                 Bus.emit('notification', {
                     title: "Fehler beim Login",
-                    message: "Bitte prüfen Sie die ihre E-Mail und ihr Passwort.",
+                    message: json.message,
                     categoryName: "warning"
                 })
                 return false;
             }
 
-            const json = await res.json();
             localStorage.setItem('access_token', json.data.accessToken);
 
             const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URI}/api/v1/auth/me`, {

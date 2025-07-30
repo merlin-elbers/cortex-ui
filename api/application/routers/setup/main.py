@@ -1,10 +1,14 @@
 import datetime
+import secrets
+
 import uuid6
 from fastapi import APIRouter
 from application import init_db
 from application.modules.auth.security import hash_password
 from application.modules.database.connection import logger
-from application.modules.database.database_models import Microsoft365, SMTPServer, User, MatomoConfig, WhiteLabelConfig
+from application.modules.database.database_models import Microsoft365, SMTPServer, User, MatomoConfig, WhiteLabelConfig, \
+    EmailVerification
+from application.modules.mail.mailer import send_html_email, prepare_base64_image, get_base64_image
 from application.modules.schemas.request_schemas import SetupData
 from application.modules.schemas.response_schemas import SetupResponse, GeneralExceptionSchema, BaseResponse, \
     ValidationError, GeneralException
@@ -105,6 +109,8 @@ async def complete_setup(data: SetupData):
         setup_env(
             mongodb_uri=data.database.uri,
             mongodb_db_name=data.database.dbName,
+            email_verification=str(data.adminUser.emailVerification),
+            external_url=data.branding.externalUrl
         )
 
         await init_db()
@@ -118,14 +124,14 @@ async def complete_setup(data: SetupData):
                 exception="Ein Admin-Benutzer existiert bereits.",
                 status_code=409
             )
-
+        user_uid = str(uuid6.uuid7())
         admin_user = User(
-            uid=str(uuid6.uuid7()),
+            uid=user_uid,
             email=data.adminUser.email,
             password=hash_password(data.adminUser.password),
             firstName=data.adminUser.firstName,
             lastName=data.adminUser.lastName,
-            isActive=True,
+            isActive=False if data.adminUser.emailVerification else True,
             role='admin',
             lastSeen=datetime.datetime.now()
         )
@@ -164,6 +170,34 @@ async def complete_setup(data: SetupData):
             )
 
             await new_configuration.create()
+
+        if data.adminUser.emailVerification:
+            verification_code = secrets.token_urlsafe(32)
+
+            new_verification = EmailVerification(
+                email=data.adminUser.email,
+                token=verification_code,
+                userUid=user_uid
+            )
+
+            await new_verification.create()
+
+            await send_html_email(
+                to_email=data.adminUser.email,
+                subject=f"{data.branding.title} | E-Mail Verifizierung",
+                template_name="mail_verification.html",
+                context={
+                    "firstName": data.adminUser.firstName,
+                    "lastName": data.adminUser.lastName,
+                    "company": data.branding.title,
+                    "code": verification_code,
+                    "link": f"{data.branding.externalUrl}/verify?code={verification_code}",
+                    "logo": prepare_base64_image(data.branding.logo.data) if data.branding.logo else
+                    get_base64_image("application/modules/mail/assets/CortexUI.png"),
+                    "cortexSmall": get_base64_image("application/modules/mail/assets/CortexUI_small.png")
+                },
+                mode=data.mailServer.type
+            )
 
         if data.analytics.connectionTested:
             await MatomoConfig.find_all().delete()

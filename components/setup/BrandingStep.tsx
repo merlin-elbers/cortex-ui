@@ -34,7 +34,7 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
 
             <div className="space-y-2">
                 <Label htmlFor={"projectTitle"}>
-                    Website Titel <span className={"text-red-500"}>*</span>
+                    Projekt-/Kundenname <span className={"text-red-500"}>*</span>
                 </Label>
                 <Input
                     id={"projectTitle"}
@@ -54,14 +54,28 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
                         className={"mt-1"}
                     />
                     <div className={"space-y-2"}>
-                        <Label htmlFor={"selfSignupEnabled"} className={"text-base font-medium"}>
-                            Titel anzeigen
+                        <Label htmlFor={"selfSignupEnabled"} className={"font-medium"}>
+                            Projekt-/Kundenname anzeigen
                         </Label>
                         <p className={"text-sm text-gray-500"}>
-                            Wenn aktiviert, wird der Titel, im Adminpanel in bestimmten Komponenten, angezeigt
+                            Wenn aktiviert, wird der Name, im Adminpanel in bestimmten Komponenten, angezeigt
                         </p>
                     </div>
                 </div>
+
+                <Label htmlFor={"projectExternalUrl"}>
+                    Externe URL <span className={"text-red-500"}>*</span>
+                </Label>
+                <Input
+                    id={"projectExternalUrl"}
+                    type={"url"}
+                    placeholder={"http://localhost:3000"}
+                    value={data.branding.externalUrl}
+                    onChange={(e) => updateBranding('externalUrl', e.target.value)}
+                />
+                <p className={"text-xs text-gray-500"}>
+                    Die externe URL vom Ihrer CortexUI Installation
+                </p>
 
                 <Label htmlFor={"projectSubtitle"}>
                     Untertitel

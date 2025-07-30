@@ -57,7 +57,8 @@ export default function SetupWizard() {
         },
         branding: {
             title: 'CortexUI',
-            showTitle: false
+            showTitle: false,
+            externalUrl: ''
         },
         mailServer: {
             type: 'smtp',

@@ -10,7 +10,9 @@ def setup_env(
         mongodb_uri: str = None,
         mongodb_db_name: str = None,
         self_signup: str = None,
-        setup_completed: str = None
+        email_verification: str = None,
+        setup_completed: str = None,
+        external_url: str = None,
 ):
     env_file = Path(".env")
 
@@ -24,7 +26,9 @@ def setup_env(
         "MONGODB_DB_NAME": "",
         "VERSION": "1.0.0",
         "API_PREFIX": "/api/v1",
-        "SETUP_COMPLETED": "false"
+        "EMAIL_VERIFICATION": "false",
+        "SETUP_COMPLETED": "false",
+        "EXTERNAL_URL": "http://localhost:3000/",
     }
 
     if not env_file.exists():
@@ -39,9 +43,11 @@ def setup_env(
         "FERNET_KEY": fernet_key or current_env.get("FERNET_KEY") or Fernet.generate_key().decode(),
         "MONGODB_URI": mongodb_uri or current_env.get("MONGODB_URI") or "",
         "MONGODB_DB_NAME": mongodb_db_name or current_env.get("MONGODB_DB_NAME") or "",
+        "EMAIL_VERIFICATION": email_verification or current_env.get("EMAIL_VERIFICATION"),
         "SELF_SIGNUP": self_signup or current_env.get("SELF_SIGNUP"),
         "SETUP_COMPLETED": setup_completed or current_env.get("SETUP_COMPLETED"),
+        "EXTERNAL_URL": external_url or current_env.get("EXTERNAL_URL"),
     }
 
     for key, value in updates.items():
-        set_key(str(env_file), key, value)
+        set_key(str(env_file), key, str(value))

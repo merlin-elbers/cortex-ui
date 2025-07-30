@@ -9,6 +9,7 @@ export interface WhiteLabelConfig {
     logo?: WhiteLabelLogo;
     title: string;
     showTitle: boolean;
+    externalUrl: string;
     subtitle?: string;
     description?: string;
     contactMail?: string;

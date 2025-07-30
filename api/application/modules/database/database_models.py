@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime, timedelta
+import secrets
 from typing import Optional, Literal
 from beanie import Document, Indexed
 from pydantic import Field, EmailStr
@@ -42,7 +43,7 @@ class User(Document):
     lastName: str
     role: Literal["viewer", "writer", "editor", "admin"] = Field(default=UserRole.viewer.label)
     isActive: bool
-    lastSeen: Optional[datetime.datetime] = None
+    lastSeen: Optional[datetime] = None
 
     class Settings:
         name = "Users"
@@ -56,13 +57,13 @@ class User(Document):
             "lastName": "Doe",
             "role": "admin",
             "isActive": True,
-            "lastSeen": datetime.datetime.now(),
+            "lastSeen": datetime.now(),
         }
 
 
 class Logins(Document):
     userUid: str
-    timestamp: datetime.datetime
+    timestamp: datetime
     ipAddress: str
     userAgent: str
     status: LoginStatus
@@ -87,7 +88,7 @@ class Microsoft365(Document):
     clientId: str
     secretKey: str
     tenantId: str
-    createdAt: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    createdAt: datetime = Field(default_factory=datetime.now)
 
     class Settings:
         name = "Microsoft365"
@@ -156,13 +157,42 @@ class WhiteLabelConfig(Document):
                 "contentType": "image/png",
                 "name": "CortexLogo.png",
                 "data": "<BASE_64_IMAGE_STRING>",
-                "lastModified": datetime.datetime.now()
+                "lastModified": datetime.now()
             },
             "title": "CortexUI Dashboard",
             "showTitle": False,
             "subtitle": "Innovatives, modernes und modulares Headless CMS",
-            "description": "CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.",
+            "description": "CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. "
+                           "Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, "
+                           "Content-Management und SMTP- und Microsoft365 Integration in einem leicht erweiterbaren "
+                           "Headless-System. Voll Open Source. Voller Fokus auf Developer Experience.",
             "contactMail": "info@cortex.ui",
             "contactPhone": "+49 123 456789",
             "contactFax": "+49 987 654321",
         }
+
+
+class EmailVerification(Document):
+    email: Indexed(EmailStr, unique=False)
+    token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
+    isVerified: bool = False
+    expiresAt: datetime = Field(default_factory=lambda: datetime.now() + timedelta(hours=1))
+    userUid: Optional[str] = None
+    createdAt: datetime = Field(default_factory=datetime.now)
+
+    class Settings:
+        name = "EmailVerification"
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@cortex.ui",
+                "token": "v93I8v9sxGz1fzPvLmjF6I...",
+                "is_verified": False,
+                "expires_at": "2025-07-30T12:34:56Z",
+                "user_id": "01981d65-0881-786d-8e00-b7b25f19c88f"
+            }
+        }
+
+    def is_expired(self) -> bool:
+        return datetime.now() > self.expiresAt
