@@ -1,16 +1,24 @@
 import datetime
-import subprocess
-from pathlib import Path
+import secrets
+from pathlib import Path as FilePath
+import uuid6
 from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from time import perf_counter
-import os
-from starlette.responses import FileResponse
+from fastapi import Path
+from starlette import status
+from starlette.responses import FileResponse, Response
 from application.modules.auth.dependencies import require_role
+from application.modules.backup.scheduler import start_backup_scheduler, run_mongo_backup, is_scheduler_running, \
+    stop_backup_scheduler
+from application.modules.schemas.request_schemas import BackupSettingsRequest
 from application.modules.schemas.response_schemas import (ValidationError, GeneralException, DbHealthResponse,
-                                                          BaseResponse, GeneralExceptionSchema, PingResponse, StatusResponse)
-from application.modules.database.database_models import UserRole, SMTPServer, Microsoft365, MatomoConfig
-from application.modules.schemas.schemas import ServerStatusSchema, DatabaseHealthSchema
+                                                          BaseResponse, GeneralExceptionSchema, PingResponse,
+                                                          StatusResponse, PublicKeysResponse, CreatePublicKeyResponse,
+                                                          BackupStatusResponse, BackupListResponse)
+from application.modules.database.database_models import UserRole, SMTPServer, Microsoft365, MatomoConfig, PublicKeys
+from application.modules.schemas.schemas import ServerStatusSchema, DatabaseHealthSchema, PublicKeySchema, BackupFile
+from application.modules.setup.setup_env import setup_env, BackupFrequency
 from application.modules.utils.settings import get_settings
 
 router = APIRouter()
@@ -219,86 +227,124 @@ async def mongodb_health(
 
 # region Backups
 
-@router.get("/backup/start",
+@router.get("/backup/status",
             status_code=200,
-            name="Backup starten",
+            name="Backup-Scheduler Status",
             tags=["🔍 System"],
             description="""
-                Erstellt ein aktuelles Backup der MongoDB-Datenbank und speichert es im lokalen Backup-Verzeichnis (`/backups`).
+                Prüft, ob der automatische Backup-Scheduler aktiv ist und gibt die aktuell geplanten Backup-Jobs zurück.
 
-                Der Dump wird im `.gz`-Format mithilfe von `mongodump` erzeugt. Die Route ist ausschließlich für Admins verfügbar.
+                Nutzt den internen Status des APSchedulers, um Laufzeitinformationen bereitzustellen.
 
                 ✅ Nützlich für:
-                - Manuelle Datensicherung via WebUI
-                - Integration in ein Admin-Dashboard
+                - Health-Checks
+                - Monitoring im Admin-Dashboard
 
                 🔐 **Nur mit gültigem Admin-Token zugänglich**
             """,
-            response_description="Backup-Datei erfolgreich erstellt",
+            response_description="Status und aktive Jobs des Schedulers",
             responses={
                 200: {
-                    'model': BaseResponse,
-                    'description': 'Backup erfolgreich erstellt (Dateiname enthalten)'
-                },
-                422: {
-                    'model': ValidationError,
-                    'description': 'Validierungsfehler in der Anfrage'
+                    'description': 'Scheduler läuft (inkl. Jobliste)',
+                    'model': BackupStatusResponse
                 },
                 500: {
                     'model': GeneralExceptionSchema,
-                    'description': 'Fehler beim Backup-Prozess'
+                    'description': 'Fehler beim Abrufen des Scheduler-Status'
                 }
             })
-async def start_backup(
-        _user=Depends(require_role("admin"))
+async def get_backup_status(
+        _=Depends(require_role(UserRole.admin))
+):
+    return BackupStatusResponse(
+        isOk=True,
+        status="OK",
+        message="Status erhalten",
+        isRunning=is_scheduler_running()
+    )
+
+
+@router.get("/backup/list",
+            status_code=200,
+            name="Backups auflisten",
+            tags=["🔍 System"],
+            description="""
+                Listet alle vorhandenen MongoDB-Backup-Dateien aus dem lokalen Backup-Verzeichnis (`/backups`) auf.
+
+                Zusätzlich wird das Datum des zuletzt erstellten Backups mitgeliefert und der Backupzyklus.
+
+                ✅ Nützlich für:
+                - Admin-Einsicht in vergangene Sicherungen
+                - UI-Anzeige zur Backup-Historie
+
+                🔐 **Nur mit gültigem Admin-Token zugänglich**
+            """,
+            response_description="Liste aller Backups mit Zeitstempel",
+            responses={
+                200: {
+                    'description': 'Backup-Dateien erfolgreich geladen',
+                    'model': BackupListResponse
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Lesen der Backup-Dateien'
+                }
+            })
+async def list_backups(
+        _=Depends(require_role("admin"))
 ):
     settings = get_settings()
-    now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
-    filename = f"cortexui-backup-{now}.gz"
-    backup_path = os.path.join(os.getcwd(), 'backups')
+    backup_dir = FilePath("backups")
 
-    if not backup_path:
-        os.mkdir(backup_path)
+    try:
+        freq = BackupFrequency[settings.BACKUP_FREQUENCY].value
+    except KeyError:
+        freq = BackupFrequency.daily.value
 
-    uri = settings.MONGODB_URI
-    if not uri:
-        raise GeneralException(
-            exception="Keine MONGODB_URI in der .env gefunden",
-            status_code=500,
-            status="NO_URI",
-            is_ok=False
+    if not backup_dir.exists():
+        return BackupListResponse(
+            isOk=True,
+            status="OK",
+            message="Liste aller Backups mit Zeitstempel",
+            lastBackup=None,
+            data=[],
+            frequency=freq,
+            cleanUpDays=settings.BACKUP_CLEANUP
         )
 
     try:
-        subprocess.run([
-            "mongodump",
-            f"--uri={uri}",
-            f"--db={settings.MONGODB_DB_NAME}",
-            f"--archive={os.path.join(backup_path, filename)}",
-            "--gzip"
-        ], check=True)
-
-        return BaseResponse(
+        backups = []
+        for file in sorted(backup_dir.glob("*.gz"), reverse=True):
+            stat = file.stat()
+            backups.append(BackupFile(
+                fileName=file.name,
+                createdAt=datetime.datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            ))
+        return BackupListResponse(
             isOk=True,
             status="OK",
-            message=f"Backup erstellt",
+            message="Liste aller Backups mit Zeitstempel",
+            data=backups,
+            lastBackup=backups[0].createdAt if backups else None,
+            frequency=freq,
+            cleanUpDays=settings.BACKUP_CLEANUP
         )
 
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         raise GeneralException(
             is_ok=False,
-            exception=f"Backup fehlgeschlagen: {e}",
-            status_code=500,
-            status="BACKUP_ERROR",
+            status="INTERNAL_ERROR",
+            exception=f"Fehler beim Lesen der Backupdaten: {e}",
+            status_code=500
         )
 
 
-@router.get("/backup/latest",
+@router.get("/backup/{file_name}",
             status_code=200,
-            name="Letztes Backup herunterladen",
+            name="Backup herunterladen",
             tags=["🔍 System"],
             description="""
-                Lädt die zuletzt erstellte Backup-Datei aus dem lokalen Verzeichnis `/backups/` herunter.
+                Lädt die angegebene Backup-Datei aus dem lokalen Verzeichnis `/backups/` herunter.
 
                 ✅ Nützlich für:
                 - Manuelles Wiederherstellen von Daten
@@ -324,24 +370,471 @@ async def start_backup(
                     'description': 'Interner Serverfehler während der Verarbeitung der Daten'
                 }
             })
-async def get_latest_backup(
+async def get_backup_file(
+        file_name: str = Path(..., description="Name von der Datei, die heruntergeladen werden soll"),
         _user=Depends(require_role("admin"))
 ):
-    backup_path = Path(os.path.join(os.getcwd(), 'backups'))
-    backups = sorted(backup_path.glob("*.gz"), reverse=True)
-    if not backups:
+    backup_dir = FilePath("backups")
+    file_path = backup_dir / file_name
+
+    if not file_path.exists() or not file_path.is_file():
         raise GeneralException(
-            exception="Keine Backups im Verzeichnis gefunden",
+            exception=f"Backup-Datei '{file_name}' nicht gefunden",
             status_code=404,
-            status="NO_BACKUPS_FOUND",
+            status="BACKUP_NOT_FOUND",
             is_ok=False
         )
 
     return FileResponse(
-        backups[0],
-        filename=backups[0].name,
+        path=file_path,
+        filename=file_path.name,
         media_type="application/gzip"
     )
 
+
+@router.put("/backup/settings",
+            status_code=201,
+            name="Backupeinstellungen ändern",
+            tags=["🔍 System"],
+            description="""
+                Ändert den Backupzyklus des Schedulers und die Zeit, die ein Backup maximal alt sein darf.
+
+                ✅ Nützlich für:
+                - Änderung des Zyklus
+                - Max Age für Backups
+                - Integration in ein Admin-Dashboard
+
+                🔐 **Nur mit gültigem Admin-Token zugänglich**
+            """,
+            response_description="Backup-Datei erfolgreich bearbeitet",
+            responses={
+                201: {
+                    'model': BaseResponse,
+                    'description': 'Backup erfolgreich bearbeitet'
+                },
+                422: {
+                    'model': ValidationError,
+                    'description': 'Validierungsfehler in der Anfrage'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Backup-Prozess'
+                }
+            })
+async def put_backup_frequency(
+        data: BackupSettingsRequest,
+        _=Depends(require_role("admin"))
+):
+    setup_env(
+        backup_frequency=data.frequency,
+        backup_cleanup=str(data.cleanUpDays) if data.cleanUpDays else "30"
+    )
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message="Backupeinstellungen erfolgreich geändert."
+    )
+
+
+@router.post("/backup/manually",
+            status_code=201,
+            name="Backup manuell starten",
+            tags=["🔍 System"],
+            description="""
+                Erstellt ein aktuelles Backup der MongoDB-Datenbank und speichert es im lokalen Backup-Verzeichnis (`/backups`).
+
+                Der Dump wird im `.gz`-Format mithilfe von `mongodump` erzeugt. Die Route ist ausschließlich für Admins verfügbar.
+
+                ✅ Nützlich für:
+                - Manuelle Datensicherung via WebUI
+                - Integration in ein Admin-Dashboard
+
+                🔐 **Nur mit gültigem Admin-Token zugänglich**
+            """,
+            response_description="Backup-Datei erfolgreich erstellt",
+            responses={
+                201: {
+                    'model': BaseResponse,
+                    'description': 'Backup erfolgreich erstellt (Dateiname enthalten)'
+                },
+                422: {
+                    'model': ValidationError,
+                    'description': 'Validierungsfehler in der Anfrage'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Backup-Prozess'
+                }
+            })
+async def post_backup_manually():
+    run_mongo_backup()
+
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message=f"Backup manuell gestartet",
+    )
+
+
+@router.post("/backup/start",
+            status_code=201,
+            name="Backup starten",
+            tags=["🔍 System"],
+            description="""
+                Startet den Backup Scheduler, welche im vorgegebenen Zyklus Backups von der Datenbank erstellt.
+
+                Die Dumps werden im `.gz`-Format mithilfe von `mongodump` erzeugt. Die Route ist ausschließlich für Admins verfügbar.
+
+                🔐 **Nur mit gültigem Admin-Token zugänglich**
+            """,
+            response_description="Backup-Datei erfolgreich erstellt",
+            responses={
+                201: {
+                    'model': BaseResponse,
+                    'description': 'Scheduler wurde erfolgreich gestartet'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Fehler beim Stoppen des Schedulers'
+                }
+            })
+async def post_start_backup(
+        _user=Depends(require_role("admin"))
+):
+    setup_env(
+        backup_started="true"
+    )
+    start_backup_scheduler()
+
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message=f"Backup Scheduler gestartet",
+    )
+
+
+@router.post("/backup/stop",
+             status_code=201,
+             name="Backup-Scheduler stoppen",
+             tags=["🔍 System"],
+             description="""
+                Stoppt den aktuell laufenden Backup-Scheduler und entfernt alle geplanten Backup-Jobs.
+
+                Dies deaktiviert die automatische Erstellung von Datenbank-Backups, bis der Scheduler manuell oder durch einen Neustart erneut gestartet wird.
+
+                ✅ Nützlich für:
+                - Temporäre Wartungsarbeiten
+                - Notabschaltung bei fehlerhaften Jobs
+                - UI-Kontrolle über den Backup-Zyklus
+
+                🔐 **Nur mit gültigem Admin-Token zugänglich**
+             """,
+             response_description="Backup-Scheduler gestoppt",
+             responses={
+                 201: {
+                     'model': BaseResponse,
+                     'description': 'Scheduler wurde erfolgreich gestoppt'
+                 },
+                 500: {
+                     'model': GeneralExceptionSchema,
+                     'description': 'Fehler beim Stoppen des Schedulers'
+                 }
+             })
+async def get_stop_backup(
+        _=Depends(require_role("admin"))
+):
+    setup_env(
+        backup_started="false"
+    )
+    stop_backup_scheduler()
+
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message=f"Backup Scheduler gestoppt",
+    )
+
+
+@router.delete("/backup/{file_name}",
+               status_code=204,
+               name="Backup löschen",
+               tags=["🔍 System"],
+               description="""
+                   Löscht eine angegebene Backup-Datei aus dem lokalen Backup-Verzeichnis (`/backups`).
+
+                   ⚠️ Die Löschung ist **nicht umkehrbar** – stelle sicher, dass du das Backup nicht mehr benötigst.
+
+                   ✅ Nützlich für:
+                   - Aufräumen alter Backup-Dateien
+                   - Backup-Rotation via Admin-Oberfläche
+
+                   🔐 **Nur mit gültigem Admin-Token zugänglich**
+               """,
+               response_description="Backup-Datei wurde gelöscht",
+               responses={
+                   204: {
+                       'description': 'Backup wurde erfolgreich gelöscht'
+                   },
+                   404: {
+                       'model': GeneralExceptionSchema,
+                       'description': 'Backup-Datei wurde nicht gefunden'
+                   },
+                   422: {
+                       'model': ValidationError,
+                       'description': 'Validierungsfehler in der Anfrage'
+                   },
+                   500: {
+                       'model': GeneralExceptionSchema,
+                       'description': 'Interner Fehler beim Löschen der Backup-Datei'
+                   }
+               })
+async def delete_backup_file(
+    file_name: str = Path(..., description="Name der zu löschenden Backup-Datei, z.B. cortexui-backup-2025-08-01-03-00.gz"),
+    _user=Depends(require_role("admin"))
+):
+    backup_dir = FilePath("backups")
+    file_path = backup_dir / file_name
+
+    if not file_path.exists() or not file_path.is_file():
+        raise GeneralException(
+            exception=f"Backup-Datei '{file_name}' wurde nicht gefunden.",
+            status_code=404,
+            status="BACKUP_NOT_FOUND",
+            is_ok=False
+        )
+
+    try:
+        file_path.unlink()
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT
+        )
+    except Exception as e:
+        raise GeneralException(
+            exception=f"Fehler beim Löschen der Datei: {e}",
+            status_code=500,
+            status="DELETE_FAILED",
+            is_ok=False
+        )
+
+
+# endregion
+
+# region PublicKeys
+
+@router.get("/public-keys",
+            name="Alle Public API Keys auflisten",
+            summary="Liste aller Public API Keys",
+            description="""
+                Gibt eine Übersicht aller aktiven und inaktiven Public API Keys im System zurück.
+
+                ✅ Nützlich für:
+                - Administration und Zugriffskontrolle
+                - Übersicht über Integrationen
+                - Auditing & Sicherheit
+
+                🔐 **Erfordert gültigen Login-Token**
+            """,
+            response_description="Liste der vorhandenen API Keys",
+            tags=["🔐 Public API Keys"],
+            status_code=200,
+            responses={
+                200: {
+                    'model': PublicKeysResponse,
+                    'description': 'Erfolgreiche Rückgabe aller gespeicherten API Keys'
+                },
+                401: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Nicht autorisiert'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Interner Serverfehler beim Abruf der Daten'
+                }
+            })
+async def get_public_keys(
+        _=Depends(require_role("admin"))
+):
+    return PublicKeysResponse(
+        isOk=True,
+        status="OK",
+        message=f"Public Keys gefunden",
+        data=[PublicKeySchema(**public_key.__dict__) for public_key in await PublicKeys.find_all().to_list()]
+    )
+
+
+@router.post("/public-keys",
+             name="Neuen Public API Key erstellen",
+             summary="API Key erzeugen",
+             description="""
+                Erstellt einen neuen Public API Key mit allen relevanten Parametern.
+
+                ✅ Nützlich für:
+                - Drittanbieter-Integrationen (z.B. Matomo, CMS)
+                - Zeitlich oder IP-beschränkte Zugänge
+                - Sichere Machine-to-Machine Kommunikation
+
+                🔐 **Erfordert gültigen Login-Token mit Admin-Rechten**
+             """,
+             response_description="Erstellter API Key (Vollansicht nur einmal sichtbar)",
+             tags=["🔐 Public API Keys"],
+             status_code=201,
+             responses={
+                 201: {
+                     'model': CreatePublicKeyResponse,
+                     'description': 'Neuer API Key wurde erfolgreich angelegt'
+                 },
+                 400: {
+                     'model': GeneralExceptionSchema,
+                     'description': 'Ungültige Eingabedaten'
+                 },
+                 401: {
+                     'model': GeneralExceptionSchema,
+                     'description': 'Nicht autorisiert'
+                 },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Interner Serverfehler beim Speichern der Daten'
+                }
+             })
+async def post_public_keys(
+        data: PublicKeySchema,
+        current_user=Depends(require_role("admin"))
+):
+    key = f"cortex-{secrets.token_urlsafe(24)}"
+    new_public_key = PublicKeys(
+        uid=str(uuid6.uuid7()),
+        key=key,
+        createdBy=current_user.uid,
+        name=data.name,
+        description=data.description,
+        allowedIps=data.allowedIps,
+        isActive=data.isActive,
+    )
+    await new_public_key.create()
+    return CreatePublicKeyResponse(
+        isOk=True,
+        status="OK",
+        message="Public Key erfolgreich erstellt",
+        publicKey=PublicKeySchema(
+            **new_public_key.__dict__
+        )
+    )
+
+
+@router.put("/public-keys/{uid}",
+            name="API Key aktualisieren",
+            summary="Bestehenden API Key bearbeiten",
+            description="""
+                Aktualisiert die Metadaten, IP-Beschränkungen oder den Ablaufzeitpunkt eines bestehenden Public API Keys.
+
+                ✅ Nützlich für:
+                - Verlängerung/Aktualisierung von Integrationen
+                - Ändern von IP-Listen
+                - Anpassen von Beschreibungen oder Status
+
+                🔐 **Erfordert gültigen Login-Token mit Admin-Rechten**
+            """,
+            response_description="Aktualisierter API Key",
+            tags=["🔐 Public API Keys"],
+            status_code=201,
+            responses={
+                201: {
+                    'model': BaseResponse,
+                    'description': 'API Key wurde erfolgreich aktualisiert'
+                },
+                404: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Kein API Key mit dieser UID gefunden'
+                },
+                401: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Nicht autorisiert'
+                },
+                500: {
+                    'model': GeneralExceptionSchema,
+                    'description': 'Interner Serverfehler beim Speichern der Daten'
+                }
+            })
+async def put_public_keys(
+        data: PublicKeySchema,
+        uid: str = Path(..., description="UID des Public Keys, der bearbeitet werden soll"),
+        _=Depends(require_role("admin"))
+):
+    public_key = await PublicKeys.find_one(PublicKeys.uid == uid)
+    if not public_key:
+        raise GeneralException(
+            is_ok=False,
+            status="NOT_FOUND",
+            exception="Der Public Key mit der gegebenen UID wurde nicht gefunden",
+            status_code=404
+        )
+
+    public_key.isActive = data.isActive
+    await public_key.save()
+
+    return BaseResponse(
+        isOk=True,
+        status="OK",
+        message="Public Key erfolgreich bearbeitet",
+    )
+
+
+@router.delete("/public-keys/{uid}",
+               name="Public API Key oder löschen",
+               summary="API Key löschen",
+               description="""
+                   Entfernt einen bestehenden Public API Key anhand seiner UID.
+
+                   ✅ Nützlich für:
+                   - Sicherheitsmanagement bei Schlüsselkompromittierung
+                   - Cleanup alter oder nicht mehr benötigter Keys
+                   - Gültigkeit gezielt beenden
+
+                   🔐 **Erfordert gültigen Login-Token mit Admin-Rechten**
+               """,
+               response_description="Bestätigung der Deaktivierung oder Löschung",
+               tags=["🔐 Public API Keys"],
+               status_code=204,
+               responses={
+                   204: {
+                       'description': 'API Key wurde erfolgreich deaktiviert oder gelöscht'
+                   },
+                   404: {
+                       'model': GeneralExceptionSchema,
+                       'description': 'Kein API Key mit dieser UID gefunden'
+                   },
+                   401: {
+                       'model': GeneralExceptionSchema,
+                       'description': 'Nicht autorisiert'
+                   },
+                    500: {
+                        'model': GeneralExceptionSchema,
+                        'description': 'Interner Serverfehler beim Löschen des Public Keys'
+                    }
+               })
+async def delete_public_keys(
+        uid: str = Path(..., description="UID des Public Keys, der bearbeitet werden soll"),
+        _=Depends(require_role("admin"))
+):
+    public_key = await PublicKeys.find_one(PublicKeys.uid == uid)
+    if not public_key:
+        raise GeneralException(
+            is_ok=False,
+            status="NOT_FOUND",
+            exception="Der Public Key mit der gegebenen UID wurde nicht gefunden",
+            status_code=404
+        )
+    if public_key.isActive:
+        raise GeneralException(
+            is_ok=False,
+            status="STILL_ACTIVE",
+            exception="Der Public Key mit der gegebenen UID ist noch aktiv, bitte erst deaktivieren.",
+            status_code=400
+        )
+    await public_key.delete()
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT
+    )
 
 # endregion

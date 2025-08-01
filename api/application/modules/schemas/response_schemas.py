@@ -2,7 +2,9 @@ from typing import Annotated, List
 from fastapi import Path
 from pydantic import BaseModel
 from application.modules.schemas.request_schemas import Branding, MailServer, DatabaseConfig, Analytics
-from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema, DatabaseHealthSchema
+from application.modules.schemas.schemas import GetUser, MatomoAnalytics, ServerStatusSchema, DatabaseHealthSchema, \
+    PublicKeySchema, BackupFile
+from application.modules.setup.setup_env import BackupFrequency
 
 
 # region Response Schemas
@@ -141,5 +143,24 @@ class DatabaseResponse(BaseResponse):
 
 class AnalyticsResponse(BaseResponse):
     data: Analytics
+
+
+class PublicKeysResponse(BaseResponse):
+    data: List[PublicKeySchema]
+
+
+class CreatePublicKeyResponse(BaseResponse):
+    publicKey: PublicKeySchema
+
+
+class BackupStatusResponse(BaseResponse):
+    isRunning: bool
+
+
+class BackupListResponse(BaseResponse):
+    data: List[BackupFile]
+    lastBackup: str | None = None
+    frequency: str
+    cleanUpDays: int = 30
 
 # endregion

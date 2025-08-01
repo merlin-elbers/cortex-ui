@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import secrets
-from typing import Optional, Literal
-from beanie import Document, Indexed
+from typing import Optional, Literal, List
+
+import uuid6
+from beanie import Document, Indexed, Link
 from pydantic import Field, EmailStr
 from enum import Enum
 from pydantic import HttpUrl
@@ -161,6 +163,7 @@ class WhiteLabelConfig(Document):
             },
             "title": "CortexUI Dashboard",
             "showTitle": False,
+            "externalUrl": "http://localhost:3000",
             "subtitle": "Innovatives, modernes und modulares Headless CMS",
             "description": "CortexUI ist ein hochmodernes, modulares Admin-Backend für datengetriebene Webanwendungen. "
                            "Es kombiniert leistungsstarke Analytics, rollenbasiertes User Management, "
@@ -196,3 +199,23 @@ class EmailVerification(Document):
 
     def is_expired(self) -> bool:
         return datetime.now() > self.expiresAt
+
+
+class PublicKeys(Document):
+    uid: str = Field(default_factory=lambda: str(uuid6.uuid7()))
+    key: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
+    name: str
+    description: Optional[str] = None
+    isActive: bool = True
+    allowedIps: Optional[List[str]] = None
+    expiredAt: Optional[datetime] = None
+    createdBy: Optional[str] = None
+    createdAt: datetime = Field(default_factory=datetime.now)
+    lastUsedAt: Optional[datetime] = None
+    metadata: Optional[dict] = None
+
+    class Settings:
+        name = "PublicKeys"
+
+    def is_expired(self) -> bool:
+        return self.expiredAt < datetime.now() if self.expiredAt else False

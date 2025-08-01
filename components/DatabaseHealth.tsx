@@ -75,11 +75,11 @@ export default function DatabaseHealthCard() {
             </div>
 
             <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>
-                <InfoCard icon={<Clock className={"w-5 h-5 text-slate-500"} />} label="Uptime" value={uptime} />
-                <InfoCard icon={<Zap className={"w-5 h-5 text-slate-500"} />} label="Latency" value={`${databaseHealth.latencyMs}ms`} valueClass={getLatencyColor(databaseHealth.latencyMs)} />
-                <InfoCard icon={<Users className={"w-5 h-5 text-slate-500"} />} label="Active Connections" value={databaseHealth.connectionCount} />
-                <InfoCard icon={<HardDrive className={"w-5 h-5 text-slate-500"} />} label="Storage Used" value={`${databaseHealth.storageSizeMB} MB`} />
-                <InfoCard icon={<List className={"w-5 h-5 text-slate-500"} />} label="Index Count" value={databaseHealth.indexes} />
+                <InfoCard icon={<Clock className={"w-5 h-5 text-slate-500"} />} label="Betriebszeit" value={uptime} />
+                <InfoCard icon={<Zap className={"w-5 h-5 text-slate-500"} />} label="Latenz" value={`${databaseHealth.latencyMs}ms`} valueClass={getLatencyColor(databaseHealth.latencyMs)} />
+                <InfoCard icon={<Users className={"w-5 h-5 text-slate-500"} />} label="Aktive Verbindungen" value={databaseHealth.connectionCount} />
+                <InfoCard icon={<HardDrive className={"w-5 h-5 text-slate-500"} />} label="Speicherplatz" value={`${databaseHealth.storageSizeMB} MB`} />
+                <InfoCard icon={<List className={"w-5 h-5 text-slate-500"} />} label="Anzahl Indizes" value={databaseHealth.indexes} />
                 <InfoCard icon={<Info className={"w-5 h-5 text-slate-500"} />} label="MongoDB Version" value={databaseHealth.serverVersion} />
             </div>
         </section>

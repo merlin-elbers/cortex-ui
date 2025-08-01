@@ -74,9 +74,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     return (
         <html lang="de">
             <body className={`antialiased bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50`}>
+                <Notifications />
                 <AuthProvider>
                     <div className={"min-h-screen flex"}>
-                        <Notifications />
                         <AdminSidebar />
                         <main className={"flex-1 overflow-auto"}>
                             {children}

@@ -95,7 +95,9 @@ const CortexNotFound = () => {
                         <div className={"bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 backdrop-blur-md rounded-2xl border border-slate-50 shadow-sm p-8"}>
                             <div className={"flex items-center justify-center gap-3 mb-4"}>
                                 <AlertTriangle className={"w-6 h-6 text-indigo-500"} />
-                                <h2 className={"text-2xl font-bold text-slate-900"}>System Error</h2>
+                                <h2 className={"text-2xl font-bold text-slate-900"}>
+                                    System Error
+                                </h2>
                             </div>
 
                             <p className={"text-lg text-gray-500 mb-6 transition-all duration-500"}>
@@ -124,7 +126,7 @@ const CortexNotFound = () => {
                             </div>
                             <div className={"text-green-400"}>
                                 <span className={"text-neon-green"}>
-                                    {user && user.firstName}@cortexui:~$
+                                    {user ? user.firstName : 'user'}@cortexui:~$
                                 </span>
                                 {terminalText}
                                 {showCursor &&

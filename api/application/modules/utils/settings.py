@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION: bool
     SETUP_COMPLETED: bool
     EXTERNAL_URL: str
+    BACKUP_FREQUENCY: str
+    BACKUP_STARTED: bool
+    BACKUP_CLEANUP: int
 
     class Config:
         env_file = ".env"

@@ -83,7 +83,7 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
                 <Input
                     id={"projectSubtitle"}
                     placeholder={"Innovatives, modernes und modulares Headless CMS"}
-                    value={data.branding.subtitle}
+                    value={data.branding.subtitle ? data.branding.subtitle : ''}
                     onChange={(e) => updateBranding('subtitle', e.target.value)}
                 />
 
@@ -105,7 +105,7 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
                     id={"projectContactMail"}
                     type={"email"}
                     placeholder={"info@cortex.ui"}
-                    value={data.branding.contactMail}
+                    value={data.branding.contactMail ? data.branding.contactMail : ''}
                     onChange={(e) => updateBranding('contactMail', e.target.value)}
                 />
 
@@ -115,7 +115,7 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
                 <Input
                     id={"projectContactPhone"}
                     placeholder={"+49 123 456789"}
-                    value={data.branding.contactPhone}
+                    value={data.branding.contactPhone ? data.branding.contactPhone : ''}
                     onChange={(e) => updateBranding('contactPhone', e.target.value)}
                 />
 
@@ -125,7 +125,7 @@ export const BrandingStep: FC<BrandingStepProps> = ({ data, updateData }) => {
                 <Input
                     id={"projectContactFax"}
                     placeholder={"+49 987 654321"}
-                    value={data.branding.contactFax}
+                    value={data.branding.contactFax ? data.branding.contactFax : ''}
                     onChange={(e) => updateBranding('contactFax', e.target.value)}
                 />
             </div>

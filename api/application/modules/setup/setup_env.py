@@ -1,7 +1,14 @@
 import secrets
+from enum import Enum
 from pathlib import Path
 from dotenv import dotenv_values, set_key
 from cryptography.fernet import Fernet
+
+
+class BackupFrequency(Enum):
+    daily = "Täglich"
+    weekly = "Wöchentlich"
+    monthly = "Monatlich"
 
 
 def setup_env(
@@ -13,6 +20,9 @@ def setup_env(
         email_verification: str = None,
         setup_completed: str = None,
         external_url: str = None,
+        backup_frequency: BackupFrequency = None,
+        backup_started: str = None,
+        backup_cleanup: str = None
 ):
     env_file = Path(".env")
 
@@ -29,6 +39,9 @@ def setup_env(
         "EMAIL_VERIFICATION": "false",
         "SETUP_COMPLETED": "false",
         "EXTERNAL_URL": "http://localhost:3000/",
+        "BACKUP_FREQUENCY": BackupFrequency.daily.name,
+        "BACKUP_STARTED": "false",
+        "BACKUP_CLEANUP": "10"
     }
 
     if not env_file.exists():
@@ -47,6 +60,9 @@ def setup_env(
         "SELF_SIGNUP": self_signup or current_env.get("SELF_SIGNUP"),
         "SETUP_COMPLETED": setup_completed or current_env.get("SETUP_COMPLETED"),
         "EXTERNAL_URL": external_url or current_env.get("EXTERNAL_URL"),
+        "BACKUP_FREQUENCY": (backup_frequency.name if backup_frequency else None) or current_env.get("BACKUP_FREQUENCY"),
+        "BACKUP_STARTED": backup_started or current_env.get("BACKUP_STARTED"),
+        "BACKUP_CLEANUP": backup_cleanup or current_env.get("BACKUP_CLEANUP"),
     }
 
     for key, value in updates.items():

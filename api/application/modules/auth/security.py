@@ -2,6 +2,10 @@ import datetime
 from typing import Union
 from jose import jwt
 from passlib.context import CryptContext
+from starlette import status
+from starlette.requests import Request
+from application.modules.database.database_models import PublicKeys
+from application.modules.schemas.response_schemas import GeneralException
 from application.modules.utils.settings import get_settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -26,3 +30,44 @@ def create_access_token(data: dict, expires_delta: Union[int, datetime.timedelta
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
+
+
+async def verify_public_key(request: Request):
+    key = request.headers.get("x-public-api-key")
+    if not key:
+        raise GeneralException(
+            is_ok=False,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            exception="Der öffentliche Schlüssel fehlt.",
+            status="PUB_KEY_MISSING"
+        )
+
+    db_key = await PublicKeys.find_one(PublicKeys.key == key, PublicKeys.isActive == True)
+    if not db_key:
+        raise GeneralException(
+            is_ok=False,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            exception="Der öffentliche Schlüssel wurde entweder nicht gefunden oder ist nicht aktiv.",
+            status="PUB_KEY_MISSING"
+        )
+
+    if db_key.is_expired():
+        raise GeneralException(
+            is_ok=False,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            exception="Der öffentliche Schlüssel is abgelaufen.",
+            status="PUB_KEY_MISSING"
+        )
+
+    if db_key.allowedIps:
+        client_ip = request.client.host
+        if client_ip not in db_key.allowedIps:
+            raise GeneralException(
+                is_ok=False,
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                exception="Die, im Header übermittelte, IP ist für diesen Schlüssel nicht gültig.",
+                status="PUB_KEY_MISSING"
+            )
+
+    db_key.last_used_at = datetime.datetime.now()
+    await db_key.save()

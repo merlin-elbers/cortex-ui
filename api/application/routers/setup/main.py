@@ -1,11 +1,9 @@
 import datetime
 import secrets
-
 import uuid6
 from fastapi import APIRouter
 from application import init_db
 from application.modules.auth.security import hash_password
-from application.modules.database.connection import logger
 from application.modules.database.database_models import Microsoft365, SMTPServer, User, MatomoConfig, WhiteLabelConfig, \
     EmailVerification
 from application.modules.mail.mailer import send_html_email, prepare_base64_image, get_base64_image
@@ -14,6 +12,7 @@ from application.modules.schemas.response_schemas import SetupResponse, GeneralE
     ValidationError, GeneralException
 from application.modules.setup.setup_env import setup_env
 from application.modules.utils.crypto import encrypt_password
+from application.modules.utils.logger import get_logger
 from application.modules.utils.settings import get_settings
 
 router = APIRouter()
@@ -89,6 +88,7 @@ async def check_setup():
              })
 async def complete_setup(data: SetupData):
     settings = get_settings()
+    logger = get_logger('database')
 
     if settings.SETUP_COMPLETED:
         raise GeneralException(
@@ -109,11 +109,11 @@ async def complete_setup(data: SetupData):
         setup_env(
             mongodb_uri=data.database.uri,
             mongodb_db_name=data.database.dbName,
-            email_verification=str(data.adminUser.emailVerification),
+            email_verification=str(data.adminUser.emailVerification).lower(),
             external_url=data.branding.externalUrl
         )
 
-        await init_db()
+        await init_db(logger=logger, settings=settings)
 
         existing_admin = await User.find_one(User.role == "admin")
 
@@ -150,8 +150,12 @@ async def complete_setup(data: SetupData):
         if data.mailServer.type == 'microsoft365' and data.mailServer.microsoft365 is not None and data.mailServer.microsoft365.authenticated:
             await Microsoft365.find_all().delete()
 
+            encrypted_password = encrypt_password(data.mailServer.microsoft365.secretKey)
+            del data.mailServer.microsoft365.secretKey
+
             new_configuration = Microsoft365(
                 uid=str(uuid6.uuid7()),
+                secretKey=encrypted_password,
                 **data.mailServer.microsoft365.__dict__
             )
 
@@ -183,7 +187,7 @@ async def complete_setup(data: SetupData):
             await new_verification.create()
 
             await send_html_email(
-                to_email=data.adminUser.email,
+                to_email=str(data.adminUser.email),
                 subject=f"{data.branding.title} | E-Mail Verifizierung",
                 template_name="mail_verification.html",
                 context={

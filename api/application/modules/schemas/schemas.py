@@ -1,5 +1,8 @@
 import datetime
+import secrets
 from typing import Literal, Optional, List
+
+import uuid6
 from pydantic import BaseModel
 from pydantic import HttpUrl
 
@@ -135,3 +138,22 @@ class DatabaseHealthSchema(BaseModel):
     indexes: int | str
     storageSizeMB: float
     latencyMs: float
+
+
+class PublicKeySchema(BaseModel):
+    uid: str = str(uuid6.uuid7())
+    key: str = secrets.token_urlsafe(32)
+    name: str
+    description: Optional[str] = None
+    isActive: bool = True
+    allowedIps: Optional[List[str]] = None
+    expiredAt: Optional[datetime.datetime] = None
+    createdBy: Optional[str] = None
+    createdAt: datetime.datetime = datetime.datetime.now()
+    lastUsedAt: Optional[datetime.datetime] = None
+    metadata: Optional[dict] = None
+
+
+class BackupFile(BaseModel):
+    fileName: str
+    createdAt: str | datetime.datetime

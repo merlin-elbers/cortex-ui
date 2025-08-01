@@ -1,11 +1,12 @@
 import os
 import logging
+from pathlib import Path
 from typing import Literal
 
-LogScope = Literal["database", "auth", "request", "mail", "error"]
+LogScope = Literal["database", "auth", "request", "mail", "error", "backup", "system"]
 
 def get_logger(scope: LogScope, level: int = logging.INFO) -> logging.Logger:
-    log_dir = os.path.join(os.getcwd(), "logs")
+    log_dir = Path("logs")
     os.makedirs(log_dir, exist_ok=True)
 
     log_file = os.path.join(log_dir, f"{scope}.log")

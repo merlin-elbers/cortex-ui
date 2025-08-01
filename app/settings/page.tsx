@@ -1,29 +1,38 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {Globe, Mail, Database, BarChart3, Archive, KeyRound} from 'lucide-react';
 import {Button} from "@/components/ui/button";
 import GeneralSettings from "@/components/settings/GeneralSettings";
 import {SettingTabs} from "@/types/Settings";
 import {useAuth} from "@/context/AuthContext";
-import {redirect} from "next/navigation";
+import {redirect, useRouter, useSearchParams} from "next/navigation";
 import MailSettings from "@/components/settings/MailSettings";
 import DatabaseSettings from "@/components/settings/DatabaseSettings";
 import AnalyticsSettings from "@/components/settings/AnalyticsSettings";
 import BackupSettings from "@/components/settings/BackupSettings";
+import {PublicKeySettings} from "@/components/settings/PublicKeySettings";
 
 const AdminSettings = () => {
     const { loading, isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('general');
+    const searchParams = useSearchParams()
+    const router = useRouter()
 
     const tabs: SettingTabs[] = [
         { id: 'general', label: 'Allgemein', icon: Globe, component: GeneralSettings },
-        { id: 'publicKeys', label: 'Öffentliche Keys', icon: KeyRound, component: GeneralSettings },
+        { id: 'publicKeys', label: 'Öffentliche Schlüssel', icon: KeyRound, component: PublicKeySettings },
         { id: 'email', label: 'E-Mail', icon: Mail, component: MailSettings },
         { id: 'database', label: 'Datenbank', icon: Database, component: DatabaseSettings },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, component: AnalyticsSettings },
         { id: 'backup', label: 'Backup', icon: Archive, component: BackupSettings },
     ]
+
+    useEffect(() => {
+        if (searchParams.has('view')) {
+            setActiveTab(searchParams.get('view') || 'general');
+        }
+    }, [searchParams])
 
     if (loading) return null;
     if (!isAuthenticated) return redirect('/login');
@@ -47,7 +56,11 @@ const AdminSettings = () => {
                         {tabs.map((tab) => (
                             <Button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => {
+                                    const params = new URLSearchParams();
+                                    params.set("view", tab.id);
+                                    router.replace(`?${params.toString()}`);
+                                }}
                                 variant={activeTab === tab.id ? "default" : "ghost"}
                                 className={`w-full justify-start ${activeTab === tab.id ? 'bg-indigo-600' : ''}`}
                             >

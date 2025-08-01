@@ -1,37 +1,12 @@
-from dotenv import load_dotenv
+from logging import Logger
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
 from application.modules.database.database_models import User, Logins, Microsoft365, SMTPServer, WhiteLabelConfig, \
-    MatomoConfig, EmailVerification
-from application.modules.utils.logger import get_logger
-from application.modules.utils.settings import get_settings
-
-load_dotenv()
-
-logger = get_logger('database')
+    MatomoConfig, EmailVerification, PublicKeys
+from application.modules.utils.settings import Settings
 
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    settings = get_settings()
-
-    if settings.SETUP_COMPLETED:
-        try:
-            await init_db()
-            logger.info("✅ MongoDB initialisiert.")
-        except Exception as e:
-            logger.error(f"❌ Fehler beim Initialisieren der MongoDB: {e}")
-            raise e
-    else:
-        logger.warning("⚠️ Setup nicht abgeschlossen – MongoDB-Init übersprungen.")
-    yield
-
-
-async def init_db():
-    settings = get_settings()
-
+async def init_db(logger: Logger, settings: Settings):
     mongo_uri = settings.MONGODB_URI
     db_name = settings.MONGODB_DB_NAME or "cortex-ui"
 
@@ -42,11 +17,21 @@ async def init_db():
     logger.info(f"🔌 Verbindung zu MongoDB wird aufgebaut → {mongo_uri} / DB: {db_name}")
     client = AsyncIOMotorClient(mongo_uri)
     db = client.get_database(db_name)
+    document_models = [
+            User,
+            Logins,
+            Microsoft365,
+            SMTPServer,
+            MatomoConfig,
+            WhiteLabelConfig,
+            EmailVerification,
+            PublicKeys
+        ]
 
     await init_beanie(
         database=db,
-        document_models=[User, Logins, Microsoft365, SMTPServer, MatomoConfig, WhiteLabelConfig, EmailVerification],
+        document_models=document_models,
     )
 
     logger.info("✅ Beanie Models registriert & Indexe sichergestellt.")
-    return db
+    logger.info(f"📦 {len(document_models)} Models geladen – DB ready")

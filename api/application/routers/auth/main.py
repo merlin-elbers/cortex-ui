@@ -234,7 +234,7 @@ async def post_signup(
                 "code": verification_code,
                 "link": f"{settings.EXTERNAL_URL}/verify?code={verification_code}"
             },
-            mode="smtp" if type(mail_settings) is SMTPServer else "m365"
+            mode="smtp" if type(mail_settings) is SMTPServer else "microsoft365"
         )
 
     return BaseResponse(

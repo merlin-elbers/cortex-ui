@@ -277,7 +277,7 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND
         )
 
-    await user.delete_all()
+    await user.delete()
 
     return Response(
         status_code=status.HTTP_204_NO_CONTENT

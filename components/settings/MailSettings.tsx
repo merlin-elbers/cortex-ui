@@ -13,6 +13,7 @@ import Bus from "@/lib/bus";
 import { deepEqual } from "@/lib/deepEqual";
 import {useAuth} from "@/context/AuthContext";
 import {fetchWithAuth} from "@/lib/fetchWithAuth";
+import Loader from "@/components/Loader";
 
 const defaultMailServerConfig: MailServer = {
     type: 'smtp',
@@ -39,6 +40,7 @@ export default function MailSettings() {
     const { user } = useAuth()
     const [emailData, setEmailData] = useState<MailServer>(JSON.parse(JSON.stringify(defaultMailServerConfig)))
     const [originalEmailData, setOriginalEmailData] = useState<MailServer | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
     const [isModified, setIsModified] = useState(false);
     const [isTestingSmtp, setIsTestingSmtp] = useState(false);
     const [isAuthenticatingM365, setIsAuthenticatingM365] = useState(false);
@@ -63,6 +65,7 @@ export default function MailSettings() {
                 }
             })
             .catch(() => setOriginalEmailData(JSON.parse(JSON.stringify(defaultMailServerConfig))))
+            .finally(() => setLoading(false))
     }, []);
 
     useEffect(() => {
@@ -191,6 +194,8 @@ export default function MailSettings() {
             })
             .finally(() => setIsSaving(false))
     }
+
+    if (loading) return <Loader className={"lg:col-span-3 bg-slate-50 border border-gray-200 rounded-lg p-6 relative w-full h-full"} />
 
     return (
         <div className={"lg:col-span-3 bg-slate-50 border border-gray-200 rounded-lg p-6"}>

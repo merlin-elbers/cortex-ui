@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, HttpUrl, EmailStr, constr, StringConstraints
 from typing import Optional, Union, Annotated
 from datetime import datetime
-
+from application.modules.setup.setup_env import BackupFrequency
 
 MailType = Annotated[str, StringConstraints(pattern="^(smtp|microsoft365)$")]
 
@@ -105,3 +105,8 @@ class M365TokenRequest(BaseModel):
 
 class VerifyRequest(BaseModel):
     code: str
+
+
+class BackupSettingsRequest(BaseModel):
+    frequency: BackupFrequency
+    cleanUpDays: int = 30

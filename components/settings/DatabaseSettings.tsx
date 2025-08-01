@@ -8,6 +8,7 @@ import {DatabaseConfig} from "@/types/Database";
 import {deepEqual} from "@/lib/deepEqual";
 import DatabaseHealthCard from "@/components/DatabaseHealth";
 import {fetchWithAuth} from "@/lib/fetchWithAuth";
+import Loader from "@/components/Loader";
 
 const defaultMongoDbConfig = {
     uri: "mongodb://localhost:27017",
@@ -21,6 +22,7 @@ export default function DatabaseSettings() {
     const [originalData, setOriginalData] = useState<DatabaseConfig>()
     const [isModified, setIsModified] = useState<boolean>(false)
     const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(true)
 
 
     useEffect(() => {
@@ -37,6 +39,7 @@ export default function DatabaseSettings() {
                 }
             })
             .catch(() => setOriginalData(JSON.parse(JSON.stringify(defaultMongoDbConfig))))
+            .finally(() => setLoading(false))
     }, [])
 
     useEffect(() => {
@@ -111,6 +114,8 @@ export default function DatabaseSettings() {
             })
             .finally(() => setIsSaving(false))
     }
+
+    if (loading) return <Loader className={"lg:col-span-3 bg-slate-50 border border-gray-200 rounded-lg p-6 relative w-full h-full"} />
 
     return (
         <div className={"lg:col-span-3 bg-slate-50 border border-gray-200 rounded-lg p-6"}>

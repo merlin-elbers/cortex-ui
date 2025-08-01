@@ -5,7 +5,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from application.modules.setup.setup_guard import SetupGuardMiddleware
-from application.modules.database.connection import init_db, lifespan
+from application.modules.database.connection import init_db
+from application.modules.utils.lifespan import lifespan
 
 
 class Application:

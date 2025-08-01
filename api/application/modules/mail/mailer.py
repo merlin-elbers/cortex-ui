@@ -46,17 +46,17 @@ async def send_html_email(
         subject: str,
         template_name: str,
         context: dict,
-        mode: Literal["smtp", "m365"] = "smtp"
+        mode: Literal["smtp", "microsoft365"] = "smtp"
 ):
     template = env.get_template(template_name)
     html_content = template.render(**context)
 
     if mode == "smtp":
         await send_via_smtp(to_email, subject, html_content)
-    elif mode == "m365":
+    elif mode == "microsoft365":
         await send_via_m365(to_email, subject, html_content)
     else:
-        raise ValueError("Unknown send mode. Use 'smtp' or 'm365'.")
+        raise ValueError("Unknown send mode. Use 'smtp' or 'microsoft365'.")
 
 
 async def send_via_smtp(to_email: str, subject: str, html_content: str):
@@ -89,9 +89,9 @@ async def send_via_m365(to_email: str, subject: str, html_content: str):
         raise Exception("Microsoft365 Konfiguration wurde nicht gefunden")
 
     async def get_token():
-        token_path = Path("tokens", "mail_token.txt")
+        token_path = Path("tokens", "mail_token.json")
         if not token_path.exists():
-            raise FileNotFoundError("Token-Datei fehlt: tokens/mail_token.txt")
+            raise FileNotFoundError("Token-Datei fehlt: tokens/mail_token.json")
 
         content = token_path.read_text().strip()
         try:
